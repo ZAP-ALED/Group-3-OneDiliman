@@ -4,8 +4,8 @@ This is a course requirement for CS 191/CS192 Software Engineering Courses of th
 
 Team Members
 
-Decampong, Fahad Aziz
-Dela Paz, Marc Emanuel
-Laviste, Monica
-Perez, Pio Lorenzo
-Yunque, Basi
+* Decampong, Fahad Aziz
+* Dela Paz, Marc Emanuel
+* Laviste, Monica
+* Perez, Pio Lorenzo
+* Yunque, Basi
