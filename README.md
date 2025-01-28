@@ -8,4 +8,4 @@ Team Members
 * Dela Paz, Marc Emanuel
 * Laviste, Monica
 * Perez, Pio Lorenzo
-* Yunque, Basi
+* Yunque, Sebastian
