@@ -1,0 +1,111 @@
+@font-face {
+  font-family: "Inter";
+  src: url("/src/assets/fonts/Inter/Inter.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("/src/assets/fonts/Roboto/Roboto-Regular.ttf") format("truetype");
+}
+
+:root {
+  --u-grad: linear-gradient(
+    to bottom right,
+    #8d021f,
+    #452c2c,
+    #005538,
+    #005538
+  );
+}
+
+.admin-title-container {
+  background-color: white;
+  height: 6rem;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, #8d021f, #005538) 30;
+  display: flex;
+  justify-content: center;
+}
+
+.admin-title {
+  width: 85%;
+  height: 6rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid;
+  border-image: linear-gradient(to right, #8d021f, #005538) 30;
+  padding-top: 1rem;
+}
+
+.admin-title-text,
+.view-type {
+  display: inline-block;
+  font-size: 2rem;
+  font-weight: bold;
+  background: var(--u-grad);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-right: 1.5rem;
+}
+
+.admin-title button {
+  border: 1px solid #6f6f6f;
+  border-radius: 100px;
+  font-size: 1rem;
+  padding: 0 0.75em 0 0.5em;
+}
+
+.search-container,
+.add-org {
+  background-color: rgba(255, 255, 255, 0.69);
+  border: none;
+  border-radius: 0.4rem;
+  padding: 0.2em 0.5em;
+  display: flex;
+  align-items: center;
+}
+
+.search-container input {
+  background: none;
+  border: none;
+  width: 20rem;
+  font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.add-org {
+  margin-left: 1rem;
+  font-family: "Inter";
+  margin-bottom: 0.5rem;
+}
+
+.add-org svg {
+  margin-left: 0;
+}
+
+.table-container {
+  background-color: white;
+  border-radius: 0.3rem;
+  padding: 0.5rem 1rem;
+}
+
+.no-permission {
+  background-color: #ffc2c2;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4545;
+}
+
+.sweet-loading {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 20%;
+}

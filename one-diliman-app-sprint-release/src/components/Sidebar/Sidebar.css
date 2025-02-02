@@ -1,0 +1,37 @@
+.Sidebar {
+    width: 250px !important;
+    background-color: #E8E8E8 !important;
+    top: 54px !important;
+}
+
+.sidebar-header {
+    color: #444444;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif; 
+    padding: 20px 20px 10px 20px;
+}
+
+.accordion-button::after {
+    display: none !important;
+  }
+
+.starred-org-entry {
+    background-color: white;
+    margin: 7px;
+    border-radius: 5px;
+
+    font-size: 17px;
+    padding-top: 14.6px;
+    padding-bottom:7px;
+    padding-left: 22px;
+    text-align: left;
+    width: 104%;
+}
+
+.favorites-button-sidebar {
+    padding-top: -20px;
+    vertical-align: middle;
+}
+
+
+
