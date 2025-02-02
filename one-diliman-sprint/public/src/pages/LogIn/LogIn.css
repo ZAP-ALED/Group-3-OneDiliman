@@ -1,0 +1,135 @@
+.app-body {
+  background-color: #d9d9d9;
+  height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.app-login {
+  background-color: #ffffff;
+  position: absolute;
+  top: 15%;
+  /* left: 50%;
+    transform: translate(-50%, -45%); */
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 30vw;
+  padding: 2.5vw;
+  text-align: center;
+
+  box-shadow: 2px 2px 10px #888888;
+}
+
+@media (max-width: 767px) {
+  /* Breakpoint for mobile devices */
+  .app-login {
+    width: 100vw;
+    padding: 5vw; /* Adjust padding as needed */
+  }
+}
+
+.app-login * {
+  width: 20vw;
+}
+
+.app-header-logo {
+  width: 3.5vw;
+  height: 3.5vw;
+}
+
+/* Circle drop shadow credit from https://stackoverflow.com/questions/27212782/box-shadow-circle */
+
+.login-logo {
+  width: 20vh;
+  height: 20vh;
+  border-radius: 50%;
+  box-shadow: 0 2px 2px 1px #cccccc;
+}
+
+.login-email-input,
+.login-password-input {
+  background-color: #d9d9d9;
+  border: none;
+
+  height: 5vh;
+  border-bottom: 1px solid #8d021f;
+  margin-bottom: 2.5vh;
+  width: 100%;
+}
+
+.login-email-input:focus,
+.login-password-input:focus {
+  outline: none;
+}
+
+.login-email-blank,
+.login-password-blank {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+}
+
+.login-email-icon-box,
+.login-password-icon-box {
+  height: 5vh;
+  width: 5vh;
+  background-color: #d9d9d9;
+  border-bottom: 1px solid #8d021f;
+}
+
+.login-show-password {
+  height: 5vh;
+  width: 5vh;
+
+  background-color: #d9d9d9;
+  border: none;
+  border-bottom: 1px solid #8d021f;
+}
+
+.login-email-icon,
+.login-password-icon {
+  width: 2.5vh;
+  height: 2.5vh;
+  margin-top: 0.5vh;
+}
+
+.login-password-hide,
+.login-password-show {
+  width: 3vh;
+  height: 3vh;
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.login-button {
+  height: 5vh;
+  background-color: #005538;
+  color: #ffffff;
+  border: none;
+  width: 100%;
+}
+
+.login-forget {
+  color: #4a5568;
+  text-decoration: none;
+  width: 100%;
+}
+
+.login-guest {
+  height: 5vh;
+  width: 100%;
+
+  background-color: transparent;
+  color: #4a5568;
+  border: 1px solid #4a5568;
+}
+
+.error-message {
+  size: 12px;
+}
