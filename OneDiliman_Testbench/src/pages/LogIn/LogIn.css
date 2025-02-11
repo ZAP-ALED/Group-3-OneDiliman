@@ -1,5 +1,5 @@
 .app-body {
-  background-color: #d9d9d9;
+  background-color: #fff;
   height: 90vh;
 
   display: flex;
@@ -54,7 +54,7 @@
 
 .login-email-input,
 .login-password-input {
-  background-color: #d9d9d9;
+  background-color: #fff;
   border: none;
 
   height: 5vh;
@@ -79,7 +79,7 @@
 .login-password-icon-box {
   height: 5vh;
   width: 5vh;
-  background-color: #d9d9d9;
+  background-color: #fff;
   border-bottom: 1px solid #8d021f;
 }
 
@@ -87,7 +87,7 @@
   height: 5vh;
   width: 5vh;
 
-  background-color: #d9d9d9;
+  background-color: #fff;
   border: none;
   border-bottom: 1px solid #8d021f;
 }

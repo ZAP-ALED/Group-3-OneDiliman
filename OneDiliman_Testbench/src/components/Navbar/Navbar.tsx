@@ -92,7 +92,7 @@ function DisplayLink({ currentPage }) {
         <a className="navbar-brand" href="#">
           <Link to ="/">
           <img src={logo} alt="" className="d-inline-block align-middle"></img>
-          UGNAYAN
+          OneDiliman
           </Link>
         </a>
 
@@ -122,7 +122,7 @@ function DisplayLink({ currentPage }) {
         <a className="navbar-brand" href="#">
           <Link to ="/">
           <img src={logo} alt="" className="d-inline-block align-middle"></img>
-          UGNAYAN
+          OneDiliman
           </Link>
         </a>
 
@@ -152,7 +152,7 @@ function DisplayLink({ currentPage }) {
         <a className="navbar-brand" href="#">
           <Link to ="/">
           <img src={logo} alt="" className="d-inline-block align-middle"></img>
-          UGNAYAN
+          OneDiliman
           </Link>
         </a>
 
@@ -186,7 +186,7 @@ function DisplayLink({ currentPage }) {
 
           <Link to ="/dashboard">
           <img src={logo} alt="" className="d-inline-block align-middle"></img>
-          UGNAYAN
+          OneDiliman
           </Link>
         </a>
 

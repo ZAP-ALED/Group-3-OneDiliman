@@ -1,0 +1,21 @@
+# Assisted by ChatGPT
+# Assist Date: 02/09/2025
+# Prompt: I'm building a sign-up page in React and need a toggle component that lets 
+    users choose between signing up as a "Student" or an "Organization". 
+    I'm using the useState hook to manage the selected account type, and I want the 
+    active button to have an "active" class applied. Could you provide the code for a 
+    container with two buttons, one for "Student" and one for "Organization" that updates 
+    the state accordingly when clicked?
+# Sources Provided: None
+# Used this for the toggle buttons of the sign up page. 
+
+# Assisted by ChatGPT
+# Assist Date: 02/09/2025
+# Prompt: I want to extend the courses drop down field in this code such 
+    that there is another field called college wherein a user selects the college 
+    they are in and the course field only shows the courses in that college. 
+# Sources Provided: None
+# Integrated the code for the college, course, and org type dropdown fields to the 
+    student and organization sign up forms respectively.
+
+
