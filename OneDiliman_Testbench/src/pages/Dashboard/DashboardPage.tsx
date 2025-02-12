@@ -131,8 +131,8 @@ const filteredOrgs = orgs.filter(org =>
       <Sidebar orgs={sortedOrgs} toggleStarred={toggleStarred} />
       <div className="header-container">
       <div className="container-md">
-      <div className="main-text"> What Org You Looking For?</div>
-      <div className="sub-text"> Type in keywords, or use tags to filter out the results.</div>
+      <div className="main-text"> OneDiliman Hub</div>
+      <div className="sub-text"> Type in keywords or use tags to filter out the results!</div>
         <div className="row search-row">
           <div className="col-2"></div>
           <div className="col-7">

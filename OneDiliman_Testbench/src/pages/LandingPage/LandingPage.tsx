@@ -12,8 +12,8 @@ export default function LandingPage() {
             <div className="row">
               <div className="col text-center">
                 <h5 className="welcome-to">WELCOME TO</h5>
-                <h1 className="display-1 ugnayan-text mb-0">UGNAYAN</h1>
-                <h3 className="gateway">Your gateway to UP Org Culture</h3>
+                <h1 className="display-1 ugnayan-text mb-0">OneDiliman</h1>
+                <h3 className="gateway">UP Diliman's Org-Hub</h3>
               </div>
             </div>
           </div>
@@ -40,8 +40,8 @@ export default function LandingPage() {
             <div className="row">
               <div className="col text-center">
                 <p className="custom-paragraph">UP Diliman is home to a vibrant and diverse ecosystem of hundreds of 
-                  university organizations. <span className="ugnayan-text">UGNAYAN</span>'s aim is to streamline the 
-                  process of discovering, learning about, applying, and engaging with them, empowering every 
+                  university organizations. <span className="ugnayan-text">OneDiliman</span>'s aim is to streamline the 
+                  process of discovering, learning, applying, and engaging with them, empowering every 
                   student to find their perfect match within the UP Org community.</p>
               </div>
             </div>
