@@ -650,6 +650,11 @@ export async function kickMember(userId: string, orgId: string) {
   alert("User is now removed");
 }
 
+// Post Functions
+
+// View Post function (Coming Soon)
+export async function fetchPostData() {}
+
 // Add Post to database
 export async function addPostData(
   postOwner: string,
@@ -677,4 +682,27 @@ export async function addPostData(
   });
 
   // alert("Post has been added to database");
+}
+
+// Edit Post in database (Coming Soon)
+export async function editPostData() {}
+
+// Delete Post from database
+// Note that a post can only be delete if the organization is the owner of the post
+export async function deletePost(
+  id: string,
+  postTitle: string,
+  postContent: string
+
+) {
+  const db = getFirestore();
+  const postDoc = doc(db, "posts", id);
+  await deleteDoc(postDoc);
+
+  const docRef = await addDoc(collection(db, "archived-posts"), {
+    postTitle: postTitle,
+    postContent: postContent,
+  });
+
+  // alert("Post has been archived");
 }
