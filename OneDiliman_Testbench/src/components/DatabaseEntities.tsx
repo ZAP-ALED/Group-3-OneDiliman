@@ -188,7 +188,8 @@ export class Organization {
 }
 
 export class Post {
-     private orgId: string;
+     private postOwner: string;
+     private postId: string;
      private postTitle: string;
      private postContent: string;
      private postPictures: string[];
@@ -197,15 +198,17 @@ export class Post {
      private postTime: string;
 
      constructor (
-          orgId: string,
+          postId: string,
           postTitle: string,
           postContent: string,
           postPictures: string[],
           postTags: string[],
           postDate: string,
-          postTime: string
+          postTime: string,
+          postOwner: string,
      ) {
-          this.orgId = orgId;
+          this.postOwner = postOwner;
+          this.postId = postId;
           this.postTitle = postTitle;
           this.postContent = postContent;
           this.postPictures = postPictures;
@@ -214,8 +217,12 @@ export class Post {
           this.postTime = postTime;
      }
 
-     public getOrgId() {
-          return this.orgId;
+     public getPostId() {
+          return this.postId;
+     }
+
+     public getPostOwner() {
+          return this.postOwner;
      }
      
      public getPostTitle() {
