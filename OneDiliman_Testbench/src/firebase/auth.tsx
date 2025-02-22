@@ -89,3 +89,36 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
         });
     });
 }
+
+ /* Create Post */ 
+export const doCreatePost = async (formData: any) => {
+    const db = getFirestore(app);
+    const postRef = doc(collection(db, "posts"));
+
+    await setDoc(postRef, {
+        postId: formData.postId,                  // ID of the post
+        postOwner: formData.postOwner,            // Owner of the post
+        postTitle: formData.postTitle,          // Title of the post
+        postContent: formData.postContent,      // Content of the post in text
+        postPictures: formData.postPictures !== "" ? formData.postPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],     // Content of the post in image
+        postTags: formData.postTags !== "" ? formData.postTags.toString().split(",").toString().split(",") : [],    // What is the post about
+        postDate: formData.postDate,            // Date the post is created
+        postTime: formData.postTime,            // Time the post is created       
+    });
+}
+
+ /* Delete post */ 
+ /* Note: To delete, the current organization must be the same as the post owner */
+export const doDeletePost = async (postId: string) => {
+    const db = getFirestore(app);
+    const postRef = doc(db, "posts", postId);
+
+    /* Check if current organization is the owner */
+
+
+    await setDoc(postRef, {
+        postTitle: "Deleted Post",
+        postContent: "This post has been deleted.",
+        postPictures: ["https://imgur.com/E6u04LW"]
+    });
+}
