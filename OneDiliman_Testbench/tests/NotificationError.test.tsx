@@ -13,7 +13,7 @@ test('renders dashboard', () => {
 
   render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
-  const instructions = screen.getByText(/What Org You Looking For?/i);
+  const instructions = screen.getByText(/OneDiliman Hub/i);
 
   expect(instructions).toBeInTheDocument();
 });
