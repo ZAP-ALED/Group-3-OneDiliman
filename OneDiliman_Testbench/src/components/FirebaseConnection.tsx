@@ -11,6 +11,7 @@ import {
   FieldValue,
   getDoc,
   setDoc,
+  
 } from "firebase/firestore";
 import firebase from "firebase/compat/app";
 
@@ -33,7 +34,11 @@ export async function fetchUserData() {
 
     return users;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -51,7 +56,11 @@ export async function fetchOrgAccountData() {
 
     return users;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -67,7 +76,11 @@ export async function fetchUserBookmarks(id: string) {
       return data.orgBookmarks;
     }
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -94,7 +107,7 @@ export async function fetchOrgData() {
   try {
     const db = getFirestore();
     const colRef = collection(db, "organizations");
-    const users = [];
+    const users: any[] = [];
     const snapshot = await getDocs(colRef);
 
     snapshot.docs.forEach((doc) => {
@@ -103,7 +116,11 @@ export async function fetchOrgData() {
 
     return users;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -151,6 +168,7 @@ export async function addOrgData(
 
   // alert("Organization has been added to database");
 }
+
 export async function deleteOrg(
   id: string,
   orgName: string,
@@ -333,9 +351,9 @@ export async function fetchOrgMembers(orgId: string) {
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        userData.orgStatus = userBool[i];
-        userData.id = userDocSnap.id;
-        if (userData.memberOrgs[orgId]) {
+        (userData as any).orgStatus = userBool[i];
+        (userData as any).id = userDocSnap.id;
+        if ((userData as any).memberOrgs[orgId]) {
           members.push(userData);
         }
       }
@@ -345,7 +363,11 @@ export async function fetchOrgMembers(orgId: string) {
 
     return members;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -373,9 +395,9 @@ export async function fetchOrgApplicants(orgId: string) {
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        userData.orgStatus = userBool[i];
-        userData.id = userDocSnap.id;
-        if (userData.appliedOrgs[orgId]) {
+        (userData as any).orgStatus = userBool[i];
+        (userData as any).id = userDocSnap.id;
+        if ((userData as any).appliedOrgs[orgId]) {
           applicants.push(userData);
         }
       }
@@ -385,7 +407,11 @@ export async function fetchOrgApplicants(orgId: string) {
 
     return applicants;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -413,9 +439,9 @@ export async function fetchOrgAspiringApplicants(orgId: string) {
 
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
-        userData.orgStatus = userBool[i];
-        userData.id = userDocSnap.id;
-        if (userData.aspiringAppliedOrgs[orgId]) {
+        (userData as any).orgStatus = userBool[i];
+        (userData as any).id = userDocSnap.id;
+        if ((userData as any).aspiringAppliedOrgs[orgId]) {
           aspiringApplicants.push(userData);
         }
       }
@@ -425,7 +451,11 @@ export async function fetchOrgAspiringApplicants(orgId: string) {
 
     return aspiringApplicants;
   } catch (err) {
-    console.error(err.message);
+    if (err instanceof Error) {
+      console.error(err.message);
+    } else {
+      console.error(err);
+    }
     throw err; // Rethrow the error to be handled elsewhere if needed
   }
 }
@@ -618,4 +648,61 @@ export async function kickMember(userId: string, orgId: string) {
   }
 
   alert("User is now removed");
+}
+
+// Post Functions
+
+// View Post function (Coming Soon)
+export async function fetchPostData() {}
+
+// Add Post to database
+export async function addPostData(
+  postOwner: string,
+  postId: string,
+  postTitle: string,
+  postContent: string,
+  postPictures: string[],
+  postDate: string,
+  postTime: string,
+  postTags: string[],
+
+) {
+  const db = getFirestore();
+
+  const docRef = await addDoc(collection(db, "posts"), {
+    postOwner: postOwner,
+    postId: postId,
+    postTitle: postTitle,
+    postContent: postContent,
+    postDate: postDate,
+    postTime: postTime,
+    postTags: postTags,
+    postPictures: postPictures
+
+  });
+
+  // alert("Post has been added to database");
+}
+
+// Edit Post in database (Coming Soon)
+export async function editPostData() {}
+
+// Delete Post from database
+// Note that a post can only be delete if the organization is the owner of the post
+export async function deletePost(
+  id: string,
+  postTitle: string,
+  postContent: string
+
+) {
+  const db = getFirestore();
+  const postDoc = doc(db, "posts", id);
+  await deleteDoc(postDoc);
+
+  const docRef = await addDoc(collection(db, "archived-posts"), {
+    postTitle: postTitle,
+    postContent: postContent,
+  });
+
+  // alert("Post has been archived");
 }

@@ -186,3 +186,68 @@ export class Organization {
           return this.openForApplications;
      }
 }
+
+export class Post {
+     private postOwner: string;
+     private postId: string;
+     private postTitle: string;
+     private postContent: string;
+     private postPictures: string[];
+     private postTags: string[];
+     private postDate: string;
+     private postTime: string;
+
+     constructor (
+          postId: string,
+          postTitle: string,
+          postContent: string,
+          postPictures: string[],
+          postTags: string[],
+          postDate: string,
+          postTime: string,
+          postOwner: string,
+     ) {
+          this.postOwner = postOwner;
+          this.postId = postId;
+          this.postTitle = postTitle;
+          this.postContent = postContent;
+          this.postPictures = postPictures;
+          this.postTags = postTags;
+          this.postDate = postDate;
+          this.postTime = postTime;
+     }
+
+     public getPostId() {
+          return this.postId;
+     }
+
+     public getPostOwner() {
+          return this.postOwner;
+     }
+     
+     public getPostTitle() {
+          return this.postTitle;
+     }
+     
+     public getPostContent() {
+          return this.postContent;
+     }
+     
+     public getPostPictures() {
+          const pics = this.postPictures;
+          return pics;
+     }
+     
+     public getPostTags() {
+          const tags = this.postTags;
+          return tags;
+     }
+     
+     public getPostDate() {
+          return this.postDate;
+     }
+     
+     public getPostTime() {
+          return this.postTime;
+     }
+}
