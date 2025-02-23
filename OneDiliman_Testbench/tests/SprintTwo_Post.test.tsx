@@ -27,7 +27,6 @@ async function logInUser() {
 test('navigate to org page from dashboard, create a post, delete a post', async () => {
   await logInUser();
   cleanup();
-  //await new Promise((r) => setTimeout(r, 2000));
 
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
@@ -50,4 +49,26 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     const about = screen.getByText(/Facebook/i);
     expect(about).toBeInTheDocument();
   });
-});
+
+    await fireEvent.click(screen.getByText(/Create New Post/i));
+    await user.type(screen.getByPlaceholderText(/Title/i), "Test Post (SprintTwo_Post.test.tsx)");
+    await user.type(screen.getByPlaceholderText(/Content/i), "This is a test post. Courtesy of SprintTwo_Post.test.tsx");
+    
+    // Click the create post button
+    await user.click(screen.getByTestId("create-post-button"));
+
+    // Wait for the post to be created and get the post ID from the state
+
+    await waitFor(() => {
+      const post = screen.getByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
+      expect(post).toBeInTheDocument();
+
+    });
+
+    // Delete the specific post using the captured post ID
+    await user.click(screen.getByTestId(`delete-post-button`));
+    await waitFor(() => {
+      const post = screen.queryByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
+      expect(post).toBeNull();
+    });
+  });

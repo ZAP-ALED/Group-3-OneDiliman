@@ -97,6 +97,7 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
               <button
                 className="action-button delete"
                 onClick={(e) => handleButtonClick(e, () => onDelete(post.id))}
+                data-testid="delete-post-button"
               >
                 <FontAwesomeIcon icon={faTrash} />
               </button>

@@ -560,6 +560,7 @@ export default function OrgPage() {
                 className="form-control"
                 value={newPost.postTitle}
                 onChange={(e) => setNewPost({...newPost, postTitle: e.target.value})}
+                placeholder='Title'
               />
             </div>
             <div className="mb-3">
@@ -569,6 +570,7 @@ export default function OrgPage() {
                 rows={5}
                 value={newPost.postContent}
                 onChange={(e) => setNewPost({...newPost, postContent: e.target.value})}
+                placeholder='Content'
               />
             </div>
             <div className="mb-3">
@@ -642,6 +644,7 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={handleCreatePost}
+              data-testid="create-post-button"
             >
               Create Post
             </button>
