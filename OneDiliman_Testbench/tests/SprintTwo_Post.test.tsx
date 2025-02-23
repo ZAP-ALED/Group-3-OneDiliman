@@ -4,9 +4,8 @@ import LogInPage from '../src/pages/LogIn/LoginPage.tsx';
 import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { app, db } from '../src/FirebaseConfig';
+import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
+
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
 async function logInUser() {
@@ -24,20 +23,22 @@ async function logInUser() {
   await user.click(screen.getByText(/Log In/));
 }
 
-test('login and navigate to dashboard', async () => {
-  await logInUser();
-  await render(
-    <MemoryRouter><DashboardPage /></MemoryRouter>);
-  
-  const card = await screen.findByText(/Type in keywords or use tags to filter out the results!/i);
-  expect(card).toBeInTheDocument();
-});
 
-test('navigate to org page from dashboard', async () => {
+test('navigate to org page from dashboard, create a post, delete a post', async () => {
   await logInUser();
   cleanup();
   //await new Promise((r) => setTimeout(r, 2000));
 
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>);
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 1000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+  console.log(screen.debug(orgCard));
+
+  await fireEvent.click(orgCard);
   await render(
     <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
       <Routes>
