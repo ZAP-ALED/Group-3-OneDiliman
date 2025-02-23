@@ -16,7 +16,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import Navbar from '../../components/Navbar/Navbar';
 import PostCard from './PostCard';
 import { Organization, Post } from '../../components/DatabaseEntities';
-
+import { addPostData } from '../../components/FirebaseConnection';
 import './OrgPage.css';
 
 interface Post {
@@ -192,13 +192,71 @@ export default function OrgPage() {
     };
   }, [params.orgId]);
 
+  // Create a new post
   const handleCreatePost = async () => {
+    if (!newPost.postTitle || !newPost.postContent) {
+      alert('Title and content are required');
+      return;
+    }
+
+    const postId = doc(collection(db, 'posts')).id;
+    const postDate = new Date().toISOString().split('T')[0];
+    const postTime = new Date().toLocaleTimeString();
+
+    await addPostData(
+      params.orgId!,
+      postId,
+      newPost.postTitle,
+      newPost.postContent,
+      newPost.postPictures || [],
+      postDate,
+      postTime,
+      newPost.postTags || []
+    );
+
+    setShowPostModal(false);
+    setNewPost({
+      postTitle: '',
+      postContent: '',
+      postPictures: [],
+      postTags: [],
+      postDate: '',
+      postTime: ''
+    });
   };
 
   const handleEditPost = async (post: Post) => {
-  };
+    };
 
-  const handleDeletePost = async (postId: string) => {
+
+  // Prints the post id to the console (Returns Promise<void>)
+  const handleDeletePost = async (postId: string): Promise<void> => {
+    console.log(postId);
+    
+    try {
+      const postDoc = doc(db, 'posts', postId);
+      const postSnapshot = await getDoc(postDoc);
+  
+      if (postSnapshot.exists()) {
+        const postData = postSnapshot.data();
+        const postImg = postData?.postImg;
+  
+        if (postImg) {
+          const storageRef = storage().refFromURL(postImg);
+          const imageRef = storage().ref(storageRef.fullPath);
+  
+          await imageRef.delete();
+          console.log(`${postImg} has been deleted successfully.`);
+        }
+  
+        await deleteDoc(postDoc);
+        console.log('Post deleted successfully.');
+      } else {
+        console.log('Post not found.');
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+    }
   };
 
   const handleImageUpload = async (file: File, type: 'banner' | 'logo') => {
