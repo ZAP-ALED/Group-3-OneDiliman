@@ -1,420 +1,709 @@
-import { Link } from 'react-router-dom';
-import logo from "../../assets/logo/Ugnayan Logo circle wo name.png";
-import { useState,useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import Navbar from '../../components/Navbar/Navbar';
-import './OrgPage.css';
-import { fetchOrgData, fetchUserAspiringApplication } from "../../components/FirebaseConnection";
-import Sidebar from "../../components/Sidebar/Sidebar";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronLeft, faCakeCandles, faLocationDot, faEnvelope, faGlobe, faHandshakeAngle } from '@fortawesome/free-solid-svg-icons';
-import { faFacebook } from '@fortawesome/free-brands-svg-icons';
-import Modal from 'react-bootstrap/Modal';
-import EditOrgModal from './EditOrgModal';
-import OrgApplicationModal from './OrgApplicationModal';
-import { onSnapshot, collection } from "firebase/firestore";
+import { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
-import { app } from '../../FirebaseConfig';
+import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { app, db } from '../../FirebaseConfig';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faChevronLeft, faCakeCandles, faLocationDot, faEnvelope, 
+  faGlobe, faHandshakeAngle, faPen, faPlus, faImage
+} from '@fortawesome/free-solid-svg-icons';
+import { faFacebook } from '@fortawesome/free-brands-svg-icons';
+import { Spinner } from 'react-bootstrap';
+import Modal from 'react-bootstrap/Modal';
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
+import Navbar from '../../components/Navbar/Navbar';
+import PostCard from './PostCard';
+import { Organization, Post } from '../../components/DatabaseEntities';
+
+import './OrgPage.css';
+
+interface Post {
+  id: string;
+  postOwner: string;
+  postTitle: string;
+  postContent: string;
+  postPictures: string[];
+  postTags: string[];
+  postDate: string;
+  postTime: string;
+}
+
+type EditableOrgData = Partial<Organization>;
 
 export default function OrgPage() {
   const params = useParams();
-
   const [isUserAnOrgAdmin, setIsUserAnOrgAdmin] = useState(false);
-  const [isUserAGuest, setIsUserAGuest] = useState(true);
   const [uid, setUid] = useState("");
-  const [orgId, setOrgId] = useState("");
-  const [hasUserApplied, setHasUserApplied] = useState(false);
-  const [isUserASiteAdmin, setIsUserASiteAdmin] = useState(false);
+  const [orgData, setOrgData] = useState<Organization | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [currentUserEmail, setCurrentUserEmail] = useState("");
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableData, setEditableData] = useState<EditableOrgData>({
+    orgDescription: '',
+    orgWebsite: '',
+    orgFacebook: '',
+    orgBio: '',
+  });
+
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [newPost, setNewPost] = useState<Partial<Post>>({ 
+    postTitle: '', 
+    postContent: '', 
+    postPictures: [],
+    postTags: [],
+    postDate: '',
+    postTime: ''
+  });
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState('about');
 
   useEffect(() => {
-      const auth = getAuth();
+    const auth = getAuth();
+    let postColl: () => void;
 
-      onAuthStateChanged(auth, (user) => {
-          if (user) {
-              if (auth.currentUser?.isAnonymous) {
-                  setIsUserAnOrgAdmin(false);
-              } else {
-                  const uid = user.uid;
-                  setUid(uid);
-
-                  const db = getFirestore(app);
-                  setIsUserAGuest(false);
-                  
-                  getDoc(doc(db, "users", uid)).then(docSnap => {
-                    if (docSnap.exists()) {
-                        setIsUserASiteAdmin(docSnap.data().role === "Site Admin")
-                    }
-                });
-                  getDoc(doc(db, "organization-admins", uid)).then(docSnap => {
-                      if (docSnap.exists()) {
-                        if (docSnap.data().orgName === params.orgId.replace(/\_/g, ' ')) { 
-                          setIsUserAnOrgAdmin(true);
-                        }
-                      }
-                  });
-              }
-          } else {
-            setIsUserAnOrgAdmin(false);
-          }
-      })
-    }, [isUserAnOrgAdmin, uid]);
-
-  const [orgs, setOrgs] = useState({});
-  const [orgPics, setOrgPics] = useState([]);
-  const [showEditPage, setshowEditPage] = useState(false);
-  const [showApplication, setshowApplication] = useState(false);
-
-  const handleCloseEditPage = () => setshowEditPage(false);
-  const handleshowEditPage = () => setshowEditPage(true)  
-  const handleCloseApplication = () => setshowApplication(false);
-  const handleshowApplication = () => setshowApplication(true)
-
-  const orgLogo = orgs.orgLogo + ".jpg";
-  const orgTags = orgs.orgTags;
-
-  const [websiteName, setWebsiteName] = useState('');
-  const [facebookName, setFacebookName] = useState('');
-
-  useEffect(() => {
-      if (orgs && orgs.orgWebsite) {
-          const urlParts = orgs.orgWebsite.split('/');
-          const name = urlParts[urlParts.length - 2];
-          setWebsiteName(name);
-      }
-  }, [orgs]);
-
-  useEffect(() => {
-      if (orgs && orgs.orgFacebook) {
-          const urlParts = orgs.orgFacebook.split('/');
-          const name = urlParts[urlParts.length - 2];
-          setFacebookName(name);
-      }
-  }, [orgs]);
-
-  useEffect(() => {
-    setOrgs({}); // Clear existing data before fetching new data
-    fetchOrgData()
-      .then(data => {
-        const newData = data.map(item => ({ ...item, starred: false, id: item.id }));
-        
-        // Find the organization with the same ID as params
-        const orgWithParamsId = newData.find(org => org.orgId === params.orgId);
   
-        // Update state with the organization matching the ID
-        if (orgWithParamsId) {
-          setOrgs(orgWithParamsId);
-          setOrgId(orgWithParamsId.id);
-
-          fetchUserAspiringApplication(uid, orgWithParamsId.id).then((app) => {
-            setHasUserApplied(app);
-            console.log("APPLIED")
-          });
-        
-          if (orgWithParamsId.orgPictures && orgWithParamsId.orgPictures.length > 0) {
-            setOrgPics(orgWithParamsId.orgPictures);
-          }
-        } else {
-          console.log("Organization not found with the given ID");
-        }
-      })
-      .catch(error => {
-        console.error(error);
-      });
-
-      // Set up real-time listener for users
-    const usersListener = onSnapshot(
-      collection(getFirestore(app), "users"),
-      (snapshot) => {
-        const newData = snapshot.docs.map((doc) => ({
-          name: doc.data().lastName.concat(", ", doc.data().firstName),
-          role: doc.data().role,
-          id: doc.id,
-        }));
-        setUsers(newData);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log('No user logged in');
+        setError('No user logged in');
+        setLoading(false);
+        return;
       }
-    );
+  
+      // console.log('Current user:', {
+      //   uid: user.uid,
+      //   email: user.email,
+      //   emailVerified: user.emailVerified
+      // });
+  
+      setUid(user.uid);
 
-      const orgsListener = onSnapshot(
-        collection(getFirestore(app), "organizations"),
-        (snapshot) => {
-          fetchOrgData()
-          .then(data => {
-            const newData = data.map(item => ({ ...item, starred: false }));
-            
-            // Find the organization with the same ID as params
-            const orgWithParamsId = newData.find(org => org.orgId === params.orgId);
-      
-            // Update state with the organization matching the ID
-            if (orgWithParamsId) {
-              setOrgs(orgWithParamsId);
-              if (orgWithParamsId.orgPictures && orgWithParamsId.orgPictures.length > 0) {
-                setOrgPics(orgWithParamsId.orgPictures);
-              }
-            } else {
-              console.log("Organization not found with the given ID");
-            }
-          })
-          .catch(error => {
-            console.error(error);
-          });
+      try {        
+        const orgDoc = await getDoc(doc(getFirestore(app), 'organizations', params.orgId!));
+        console.log(orgDoc);
+        const data = orgDoc.data();
+
+        
+        console.log('Raw organization data:', data);
+        
+        if (!orgDoc.exists()) {
+          setError('Organization not found');
+          setLoading(false);
+          return;
         }
-      );
-        // Clean up listeners when component unmounts
-        return () => {
-          orgsListener();
-          usersListener();
-        };
-  }, [hasUserApplied]); // Dependency array including params.orgId to re-run the effect when params.orgId changes
+        
+        const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
+        setIsUserAnOrgAdmin(isAdmin);
 
-  console.log(orgs);
-  console.log(hasUserApplied)
+        setOrgData(data as Organization);
+        
+        // console.log('Admin check:', {
+        //   userEmail: user.uid,
+        //   orgConnectedEmail: data.orgEmail,
+        //   isAdmin
+        // });
+              
+        const typedData: Organization = {
+          orgName: data.orgName || '',
+          orgCollege: data.orgCollege || '',
+          orgAcronym: data.orgAcronym || '',
+          orgDescription: data.orgDescription || '',
+          orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
+          orgWebsite: data.orgWebsite || '',
+          orgFacebook: data.orgFacebook || '',
+          orgLocation: data.orgLocation || '',
+          orgBio: data.orgBio || '',
+          orgLogo: data.orgLogo || '',
+          orgBanner: data.orgBanner || '',
+          orgPictures: Array.isArray(data.orgPictures) ? data.orgPictures : [],
+          orgTags: Array.isArray(data.orgTags) ? data.orgTags : [],
+          orgScope: data.orgScope || '',
+          orgAffiliations: Array.isArray(data.orgAffiliations) ? data.orgAffiliations : [],
+          dateFounded: data.dateFounded || '',
+          openForApplications: Boolean(data.openForApplications),
+          members: data.members || {},
+          applicants: data.applicants || {},
+          aspiringApplicants: data.aspiringApplicants || {},
+          orgConnectedEmail: data.orgConnectedEmail || '' 
+        };
+        
+        // might use in the next sprints
+        setOrgData(typedData);
+        setEditableData({
+          // orgName: typedData.orgName,
+          // orgCollege: typedData.orgCollege,
+          // orgAcronym: typedData.orgAcronym,
+          orgDescription: typedData.orgDescription,
+          // orgEmails: typedData.orgEmails,
+          orgWebsite: typedData.orgWebsite,
+          orgFacebook: typedData.orgFacebook,
+          // orgLocation: typedData.orgLocation,
+          orgBio: typedData.orgBio,
+          // orgScope: typedData.orgScope,
+          // orgAffiliations: typedData.orgAffiliations,
+          // dateFounded: typedData.dateFounded,
+          // openForApplications: typedData.openForApplications
+        });
+
+        postColl = onSnapshot(
+          collection(db, 'posts'),
+          (snapshot) => {
+            const postsData = snapshot.docs
+              .filter(doc => doc.data().postOwner === params.orgId) 
+              .map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  postId: doc.id, 
+                  postOwner: data.postOwner || '',
+                  postTitle: data.postTitle || '',
+                  postContent: data.postContent || '',
+                  postPictures: data.postPictures || [],
+                  postTags: data.postTags || [],
+                  postDate: data.postDate || '',
+                  postTime: data.postTime || ''
+                };
+              });
+
+            setPosts(postsData.sort((a, b) => 
+              new Date(b.postDate + ' ' + b.postTime).getTime() - 
+              new Date(a.postDate + ' ' + a.postTime).getTime()
+            ));
+          }
+        );
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error:', err);
+        setError('Error loading data');
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (postColl) postColl();
+    };
+  }, [params.orgId]);
+
+  const handleCreatePost = async () => {
+  };
+
+  const handleEditPost = async (post: Post) => {
+  };
+
+  const handleDeletePost = async (postId: string) => {
+  };
+
+  const handleImageUpload = async (file: File, type: 'banner' | 'logo') => {
+    if (!file) return;
+    setIsUploading(true);
+    
+    try {
+      const base64 = await convertToBase64(file);
+      
+      const orgRef = doc(db, 'organizations', params.orgId!);
+      const updateData = type === 'banner' ? { orgBanner: base64 } : { orgLogo: base64 };
+
+      await updateDoc(orgRef, updateData);
+      
+      const updatedDoc = await getDoc(orgRef);
+      setOrgData(updatedDoc.data() as Organization);
+      
+      alert('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image: ' + (error as Error).message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleUpdateOrgInfo = async () => {
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="error-container">
+        <h2>Error</h2>
+        <p>{error}</p>
+        <Link to="/dashboard" className="btn btn-primary">Return to Dashboard</Link>
+      </div>
+    );
+  }
 
   return (
-    <div> 
-      <Navbar currentPage={"dashboard"}/>
-      <Sidebar />
-
-      <div className="container-md org-header-container">
-        <Link to ="/dashboard">
-          <button className="btn btn-light back-button">
-            <FontAwesomeIcon icon={faChevronLeft} style={{ marginRight: '0.5rem' }}/> 
-            Back to Search </button>
-        </Link>
-
-        <div id="myCarousel" className="carousel slide mb-6 rounded-3" data-bs-ride="carousel">
-          <div className="carousel-inner rounded-3">
-            {orgPics.map((pic, index) => (
-              pic && (
-                <div className={`carousel-item${index === 0 ? ' active' : ''}`} key={index}>
-                  <div className="carousel-image rounded-3" style={{ 
-                    backgroundImage: pic ? `url(\"${pic}` + '.jpg\")' : '',
-                    backgroundSize: 'cover',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center',
-                    width: '100%',
-                    height: '100%'
-                  }}> </div>
+    <div className="org-page-container">
+      <Navbar currentPage="dashboard" />
+  
+      <div className="container mt-4">
+        <div className="org-hero-card">
+          <div className="org-cover-image" style={{ 
+            backgroundImage: orgData?.orgBanner ? `url(${orgData.orgBanner})` : 'none'
+          }}>
+            <div className="org-header">
+              {isUserAnOrgAdmin && (
+                <div className="edit-banner-overlay">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'banner')}
+                    id="banner-upload"
+                    hidden
+                  />
+                  <label htmlFor="banner-upload" className="btn btn-light">
+                    <FontAwesomeIcon icon={faImage} className="me-2" />
+                    {isUploading ? 'Uploading...' : 'Change Banner'}
+                  </label>
                 </div>
-              )
-            ))}
-          </div>
-
-          <button className="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
-            <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span className="visually-hidden">Previous</span>
-          </button>
-          <button className="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
-            <span className="carousel-control-next-icon" aria-hidden="true"></span>
-            <span className="visually-hidden">Next</span>
-          </button>
-        </div> 
-
-        <div className="org-header-box">
-          <div className="row">
-            <div className="col-md-auto"><img src={orgLogo} className="logo-img" alt="..."/></div>
-
-            <div className="col-6 org-header-text">
-              <h1 className="font-inter custom-grey">{orgs.orgName} ({orgs.orgAcronym})</h1>
-
-              {orgTags && orgTags.length > 0 && (
-              <div className='mt-4'> 
-                {orgTags.map((tag, index) => {
-                  let className = 'org-tags';
-                  if (tag === 'non-sectarian') {
-                    className += ' org-tags-non-sectarian';
-                  } else if (tag === 'academic') {
-                    className += ' org-tags-academic';
-                  } else if (tag === 'socio-academic') {
-                    className += ' org-tags-socio-academic';
-                  } else if (tag === 'game-development') {
-                    className += ' org-tags-socio-academic';
-                  } else if (tag === 'computer science') {
-                    className += ' org-tags-computer-science';
-                  } else if (tag === 'non-profit') {
-                    className += ' org-tags-non-profit';
-                  } else if (tag === 'game development' || tag === 'gaming') {
-                    className += ' org-tags-gaming';
-                  } else {
-                    className += ' org-tags-default';
-                  }
-                  return (
-                    <div className={className} key={index}>
-                      {tag}
-                    </div>
-                  );
-                })}
-              </div>
               )}
             </div>
-
-            <div className="col-md-auto orgpage-options">
-            {isUserAnOrgAdmin ? 
-              <>
-               <Link to={`/dashboard/${orgs.orgId}/manageMembers/Aspiring_Applicants`}>
-              <button type="button" className="btn btn-outline-dark org-options-button"> Manage Members </button>
-              </Link>
-
-
-              <button type="button" className="btn btn-outline-dark org-options-button" onClick={handleshowEditPage}> Edit Page </button>
-              <Modal
-                show={showEditPage}
-                onHide={handleCloseEditPage}
-                keyboard={false}
-                size="lg"
-              >
-                <Modal.Header closeButton>
-                  <Modal.Title id="example-modal-sizes-title-lg">
-                    Edit Page
-                  </Modal.Title>
-                </Modal.Header>
-                <Modal.Body style={{ paddingBottom: '50px' }}>
-                  <EditOrgModal handleCloseEditPage={handleCloseEditPage} />
-                </Modal.Body>
-              </Modal>
-              </> : <></> }
-            </div>
           </div>
-        </div>
-      </div>
-
-      <div className='container-md orgpage-body'>
-        <div className="row">
-     
-          <div className="col col-md-3">
-            <div className="card">
-              <div className="card-header about-card-header">
-                About
-              </div>
-              <ul className="list-group list-group-flush">
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faCakeCandles}/></div> 
-                  <div className="col-md-10 about-info"> Founded {orgs.dateFounded} </div>
-                </div></li>
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faLocationDot}/></div>
-                  <div className="col-md-10 about-info"> {orgs.orgLocation} </div>
-                </div></li>
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faEnvelope}/></div>
-                  <div className="col-md-10 about-info"> {orgs.orgEmails} </div>
-                </div></li>
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faGlobe}/></div>
-                  <div className="col-md-10 about-info"><a href={orgs.orgWebsite} target="_blank" rel="noopener noreferrer"> {websiteName} </a></div>
-                </div></li>
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faFacebook}/></div>
-                  <div className="col-md-10 about-info"><a href={orgs.orgFacebook} target="_blank" rel="noopener noreferrer"> {facebookName} </a></div>
-                </div></li>
-                <li className="list-group-item"> <div className="row">
-                  <div className="col-md-2 text-center"><FontAwesomeIcon icon={faHandshakeAngle}/></div>
-                  <div className="col-md-10 about-info"> Affiliations: {orgs.orgAffiliations} </div>
-                </div></li>
-              </ul>
+  
+          <div className="org-info-section">
+            <div className="org-logo-container">
+              <img 
+                src={orgData?.orgLogo || ''} 
+                className="org-logo"
+              />
+              {isUserAnOrgAdmin && (
+                <div className="edit-logo-overlay">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files && handleImageUpload(e.target.files[0], 'logo')}
+                    id="logo-upload"
+                    hidden
+                  />
+                  <label htmlFor="logo-upload" className="btn btn-light btn-sm">
+                    <FontAwesomeIcon icon={faImage} className="me-2" />
+                    {isUploading ? 'Uploading...' : 'Change Logo'}
+                  </label>
+                </div>
+              )}
             </div>
-
-            {isUserAGuest || isUserAnOrgAdmin || isUserASiteAdmin ? 
-              <div className="card text-center mt-3">
-                <div className="card-header right-card-header">
-                  Your Member Status
+              
+            {/* Org header */}
+            <div className="org-info">
+              <div className="org-header">
+                <div className="org-title">
+                  <h1>{orgData?.orgName}</h1>
+                  <h2>{orgData?.orgCollege}</h2>
                 </div>
-                <div className="card-body">
-                  <p className="card-text"> Sign up as a user to apply to this organization. </p>
-                </div>
-              </div>
-            :
-              <div className="card text-center mt-3">
-                <div className="card-header right-card-header">
-                  Your Member Status
-                </div>
-                {hasUserApplied ? <div>
-                  <div className="card-body">
-                    <p className="card-text">You are now an applicant in the organization.</p>
+                
+                {isUserAnOrgAdmin && (
+                  <div className="org-actions">
+                    <button 
+                      className="btn btn-outline-primary"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <FontAwesomeIcon icon={faPen} className="me-2" />
+                      Edit Organization
+                    </button>
                   </div>
-                </div> :
-                <div className="card-body">
-                  <p className="card-text"> You are not affiliated with this org. </p>
-                  {orgs.openForApplications === "Open" ? (
-                    <button type="button" className="btn btn-primary col-12 apply-button" onClick={handleshowApplication}> Apply Now </button>
-                    // <a href="#" className="btn btn-primary col-12 apply-button"> Apply Now </a>
-                  ) : (
-                    <button className="btn btn-secondary col-12 apply-button" disabled> Applications Closed </button>
-                  )}
-                  <p className="card-text"><small className="text-muted"> 
-                    {orgs.openForApplications} until Month dd, yyyy </small></p>
+                )}
+              </div>
+  
+              {orgData?.orgTags && (
+                <div className="org-tags-wrapper">
+                  {orgData.orgTags.map((tag, index) => (
+                    <span key={index} className="org-tag">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
-                }
-              </div>
-            }
-          </div>
-
-          <Modal
-                show={showApplication}
-                onHide={handleCloseApplication}
-                keyboard={false}
-                centered
-              >
-                <Modal.Header closeButton>
-                  <Modal.Title>
-                    Application Form
-                  </Modal.Title>
-                </Modal.Header>
-                <Modal.Body style={{ paddingBottom: '50px' }}>
-                  <OrgApplicationModal org={orgs} setHasUserApplied={setHasUserApplied} handleCloseApplication={handleCloseApplication} orgId={orgId} uid={uid}/>
-                </Modal.Body>
-              </Modal>
-
-          <div className="col-md-7">
-            <div className="card org-desc">
-              <div className="card-body">
-                <p className="card-text"> {orgs.orgDescription} </p>
-              </div>
+              )}
             </div>
           </div>
+        </div>
 
-          <div className="col-md-2">
+        {/* org details */}
+        <div className="row mt-4">
+          <div className="col-md-4">
             <div className="card">
-              <div className="card-header right-card-header">
-                Addtl. Feature
-              </div>
               <div className="card-body">
-                <p className="card-text"> Can add more features here (eg. statistics/analytics, members you might know, current EB, images, etc.) </p>
-              </div>
-            </div>
-
-            <div className="card mt-3">
-              <div className="card-header right-card-header">
-                Addtl. Feature
-              </div>
-              <div className="card-body">
-                <p className="card-text"> Can add more features here (eg. statistics/analytics, members you might know, etc.) </p>
+                {isEditing ? (
+                  <div className="edit-form">
+                    <div className="mb-3">
+                      <label className="form-label">Description</label>
+                      <textarea
+                        className="form-control"
+                        value={editableData.orgDescription}
+                        onChange={(e) => setEditableData({
+                          ...editableData,
+                          orgDescription: e.target.value
+                        })}
+                        rows={4}
+                      />
+                    </div>
+                    {/* <div className="mb-3">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={editableData.orgEmails}
+                        onChange={(e) => setEditableData({
+                          ...editableData,
+                          orgEmails: e.target.value
+                        })}
+                      />
+                    </div> */}
+                    <div className="mb-3">
+                      <label className="form-label">Website</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        value={editableData.orgWebsite}
+                        onChange={(e) => setEditableData({
+                          ...editableData,
+                          orgWebsite: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Facebook</label>
+                      <input
+                        type="url"
+                        className="form-control"
+                        value={editableData.orgFacebook}
+                        onChange={(e) => setEditableData({
+                          ...editableData,
+                          orgFacebook: e.target.value
+                        })}
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <button 
+                        className="btn btn-primary me-2"
+                        onClick={handleUpdateOrgInfo}
+                      >
+                        Save Changes
+                      </button>
+                      <button 
+                        className="btn btn-secondary"
+                        onClick={() => setIsEditing(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                  {/* icos */}
+                    <div className="info-item">
+                      <FontAwesomeIcon icon={faEnvelope} className="icon" />
+                      <span>{orgData?.orgConnectedEmail}</span>
+                    </div>
+                    <div className="info-item">
+                      <FontAwesomeIcon icon={faGlobe} className="icon" />
+                      <a href={orgData?.orgWebsite} target="_blank" rel="noopener noreferrer">
+                        Website
+                      </a>
+                    </div>
+                    <div className="info-item">
+                      <FontAwesomeIcon icon={faFacebook} className="icon" />
+                      <a href={orgData?.orgFacebook} target="_blank" rel="noopener noreferrer">
+                        Facebook
+                      </a>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
-          
-        </div>
-      </div>
-
-      <section id="footer">
-        <div className="container">
-          <footer className="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
-            <div className="col-md-4 d-flex align-items-center">
-              <a href="/" className="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
-                <img src={logo} alt="" width="30" height="30"></img>
-              </a>
-              <span className="mb-3 mb-md-0 text-body-secondary">&copy; 2024</span>
+              
+          {/* tab */}
+          <div className="col-md-8">
+            <div className="card">
+              <div className="card-header">
+                <Tabs
+                  activeKey={activeTab}
+                  onSelect={(k) => k && setActiveTab(k)}
+                  className="mb-0"
+                >
+                  <Tab eventKey="about" title="About">
+                    <div className="p-4">
+                      <h4>About the Organization</h4>
+                      <p>{orgData?.orgDescription}</p>
+                    </div>
+                  </Tab>
+                  <Tab eventKey="posts" title="Posts">
+                    <div className="p-4">
+                      {isUserAnOrgAdmin && (
+                        <button 
+                          className="btn btn-primary mb-4"
+                          onClick={() => setShowPostModal(true)}
+                        >
+                          <FontAwesomeIcon icon={faPlus} className="me-2"/>
+                          Create New Post
+                        </button>
+                      )}
+                      
+                      {posts.length === 0 ? (
+                        <div className="text-center p-4">
+                          <p className="text-muted">No posts yet</p>
+                        </div>
+                      ) : (
+                        <div className="posts-list">
+                          {posts.map(post => (
+                            <PostCard
+                              key={post.id}
+                              post={post}
+                              isUserAnOrgAdmin={isUserAnOrgAdmin}
+                              onEdit={setEditingPost}
+                              onDelete={handleDeletePost}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Tab>
+                </Tabs>
+              </div>
             </div>
-
-            <ul className="nav col-md-4 justify-content-end">
-              <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">Home</a></li>
-              <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">FAQs</a></li>
-              <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">Contact Us</a></li>
-              <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">About Us</a></li>
-            </ul>
-          </footer>
+          </div>
         </div>
-      </section>
+                    
+        {/* post */}
+        <Modal show={showPostModal} onHide={() => setShowPostModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Create New Post</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className="mb-3">
+              <label className="form-label">Title</label>
+              <input 
+                type="text" 
+                className="form-control"
+                value={newPost.postTitle}
+                onChange={(e) => setNewPost({...newPost, postTitle: e.target.value})}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Content</label>
+              <textarea 
+                className="form-control"
+                rows={5}
+                value={newPost.postContent}
+                onChange={(e) => setNewPost({...newPost, postContent: e.target.value})}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Tags (comma separated)</label>
+              <input 
+                type="text" 
+                className="form-control"
+                value={newPost.postTags?.join(', ')}
+                onChange={(e) => setNewPost({
+                  ...newPost, 
+                  postTags: e.target.value.split(',').map(tag => tag.trim())
+                })}
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label d-block">Images</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={(e) => {
+                  if (e.target.files) {
+                    Promise.all(
+                      Array.from(e.target.files).map(file => convertToBase64(file))
+                    ).then(base64Images => {
+                      setNewPost(prev => ({
+                        ...prev,
+                        postPictures: [...(prev.postPictures || []), ...base64Images]
+                      }));
+                    });
+                  }
+                }}
+                className="d-none"
+                id="post-image-upload"
+              />
+              <label htmlFor="post-image-upload" className="btn btn-outline-secondary">
+                <FontAwesomeIcon icon={faImage} className="me-2" />
+                {isUploading ? 'Uploading...' : 'Add Images'}
+              </label>
+              {newPost.postPictures && newPost.postPictures.length > 0 && (
+                <div className="mt-2 d-flex flex-wrap gap-2">
+                  {newPost.postPictures.map((img, index) => (
+                    <div key={index} className="position-relative">
+                      <img 
+                        src={img} 
+                        alt={`Upload preview ${index + 1}`} 
+                        style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                      />
+                      <button 
+                        className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                        onClick={() => setNewPost({
+                          ...newPost,
+                          postPictures: newPost.postPictures?.filter((_, i) => i !== index)
+                        })}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setShowPostModal(false)}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={handleCreatePost}
+            >
+              Create Post
+            </button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* edit post */}
+        <Modal 
+          show={editingPost !== null} 
+          onHide={() => setEditingPost(null)}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Post</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {editingPost && (
+              <>
+                <div className="mb-3">
+                  <label className="form-label">Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingPost.postTitle}
+                    onChange={(e) => setEditingPost({
+                      ...editingPost,
+                      postTitle: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Content</label>
+                  <textarea
+                    className="form-control"
+                    rows={5}
+                    value={editingPost.postContent}
+                    onChange={(e) => setEditingPost({
+                      ...editingPost,
+                      postContent: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Tags</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingPost.postTags.join(', ')}
+                    onChange={(e) => setEditingPost({
+                      ...editingPost,
+                      postTags: e.target.value.split(',').map(tag => tag.trim())
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label d-block">Images</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        Promise.all(
+                          Array.from(e.target.files).map(file => convertToBase64(file))
+                        ).then(base64Images => {
+                          setEditingPost(prev => ({
+                            ...prev!,
+                            postPictures: [...(prev!.postPictures || []), ...base64Images]
+                          }));
+                        });
+                      }
+                    }}
+                    className="d-none"
+                    id="edit-post-image-upload"
+                  />
+                  <label htmlFor="edit-post-image-upload" className="btn btn-outline-secondary">
+                    <FontAwesomeIcon icon={faImage} className="me-2" />
+                    {isUploading ? 'Uploading...' : 'Add Images'}
+                  </label>
+                  {editingPost.postPictures && editingPost.postPictures.length > 0 && (
+                    <div className="mt-2 d-flex flex-wrap gap-2">
+                      {editingPost.postPictures.map((img, index) => (
+                        <div key={index} className="position-relative">
+                          <img 
+                            src={img} 
+                            alt={`Upload preview ${index + 1}`} 
+                            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                          />
+                          <button 
+                            className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                            onClick={() => setEditingPost(prev => ({
+                              ...prev!,
+                              postPictures: prev!.postPictures.filter((_, i) => i !== index)
+                            }))}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setEditingPost(null)}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={() => editingPost && handleEditPost(editingPost)}
+            >
+              Save Changes
+            </button>
+          </Modal.Footer>
+        </Modal>
+      </div>
     </div>
-  )
+  );
 }
