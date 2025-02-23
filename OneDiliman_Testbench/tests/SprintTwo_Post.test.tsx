@@ -1,26 +1,52 @@
 import React from 'react';
-import { render, screen, waitFor} from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import userEvent from "@testing-library/user-event";
-//import FeedPage from '../src/pages/Feed/FeedPage.tsx'
-//import CreatePostPage from '../src/pages/CreatePost/CreatePostPage.tsx'
+import { render, screen, waitFor, user, cleanup, fireEvent } from '@testing-library/react';
+import LogInPage from '../src/pages/LogIn/LoginPage.tsx';
+import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import userEvent from '@testing-library/user-event';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
+import { app, db } from '../src/FirebaseConfig';
+// testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
-test('render createpostpage', () => {
-    render(
-        <MemoryRouter><FeedPage /></MemoryRouter>
-    )
+async function logInUser() {
+  cleanup();
+  await render(
+    <MemoryRouter><LogInPage /></MemoryRouter>);
+  const user = userEvent.setup();
 
-    const instructions = screen.getByText(/test/i);
-    expect(instructions).toBeInTheDocument();
-})
+  const username = screen.getByPlaceholderText("Email");
+  const password = screen.getByPlaceholderText("Password");
 
-test('create and upload a post', () => {
-    const postId 
-    const postOwner
-    const postTitle
-    const postContent
-    const postPictures
-    const postTags
-    const postDate
-    const postTime
-})
+  await user.type(username, "org1@up.edu.ph");
+  await user.type(password, "12345678");
+
+  await user.click(screen.getByText(/Log In/));
+}
+
+test('login and navigate to dashboard', async () => {
+  await logInUser();
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>);
+  
+  const card = await screen.findByText(/Type in keywords or use tags to filter out the results!/i);
+  expect(card).toBeInTheDocument();
+});
+
+test('navigate to org page from dashboard', async () => {
+  await logInUser();
+  cleanup();
+  //await new Promise((r) => setTimeout(r, 2000));
+
+  await render(
+    <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+      <Routes>
+        <Route path="/dashboard/:orgId" element={<OrgPage />} />
+      </Routes>
+    </MemoryRouter>);
+
+  await waitFor(() => {
+    const about = screen.getByText(/Facebook/i);
+    expect(about).toBeInTheDocument();
+  });
+});

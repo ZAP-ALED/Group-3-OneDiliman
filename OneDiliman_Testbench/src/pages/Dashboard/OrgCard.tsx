@@ -57,7 +57,7 @@ export default function OrgCard({ org, toggleStarred }) {
             )}
           </button>
         </div>
-        <Link to={`/dashboard/${orgId}`} className='card-link'>
+        <Link to={`/dashboard/${orgId}`} className='card-link' data-testid={`org-card-${orgId}`}>
           <img src={orgPicture} className="org-img" alt="..." />
           <div className="card-body" style={{ height: '180px', overflow: 'hidden' }}> {/* Limit card body height */}
             <h5 className="card-title">{orgName} ({org.orgAcronym})</h5>
