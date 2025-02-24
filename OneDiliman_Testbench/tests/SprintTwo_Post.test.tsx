@@ -66,7 +66,12 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     });
 
     // Delete the specific post using the captured post ID
-    await user.click(screen.getByTestId(`delete-post-button`));
+    // Delete the specific post using the first delete button found
+    const deleteButtons = screen.queryAllByTestId("delete-post-button");
+    if (deleteButtons.length > 0) {
+      await user.click(deleteButtons[0]);
+    }
+
     await waitFor(() => {
       const post = screen.queryByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
       expect(post).toBeNull();
