@@ -510,7 +510,7 @@ export default function OrgPage() {
                       <p>{orgData?.orgDescription}</p>
                     </div>
                   </Tab>
-                  <Tab eventKey="posts" title="Posts">
+                  <Tab eventKey="posts" title="Posts" data-testid="posts-tab">
                     <div className="p-4">
                       {isUserAnOrgAdmin && (
                         <button 
