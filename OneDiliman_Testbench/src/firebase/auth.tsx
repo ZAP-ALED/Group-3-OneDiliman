@@ -1,8 +1,8 @@
 // Authentication Process: https://www.youtube.com/watch?v=WpIDez53SK4
 
-import { createUserWithEmailAndPassword, signInAnonymously, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInAnonymously, signInWithEmailAndPassword, sendEmailVerification, getAuth, updateProfile } from "firebase/auth";
 import { app, auth } from "../FirebaseConfig";
-import { addDoc, collection, doc, getFirestore, setDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getFirestore, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
 // adding custom data in profile: https://www.youtube.com/watch?v=qWy9ylc3f9U
 export const doCreateUserWithEmailAndPassword = async (formData: any) => {
@@ -21,7 +21,14 @@ export const doCreateUserWithEmailAndPassword = async (formData: any) => {
                 aspiringAppliedOrgs: {},
                 memberOrgs: {},
                 orgBookmarks: {},
+                isVerified: false
             });
+
+            await sendEmailVerification(cred.user);
+            console.log("Email sent");
+
+    }).catch((error) => {
+        console.error("Error signing up: ", error);
     });
 };
 
@@ -39,9 +46,53 @@ export const doCreateSiteAdminWithEmailAndPassword = async (formData: any) => {
     });
 };
 
+/* old signIn
 export const doSignInWithEmailAndPassword = (formData: any) => {
     return signInWithEmailAndPassword(auth, formData.email, formData.password)
+}; */
+
+export const doSignInWithEmailAndPassword = async (formData: any) => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    try {
+        // Step 1: Authenticate user via Firebase Authentication
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+        console.log("User signed in:", user);
+
+        // Step 2: Check if user exists in Firestore (users collection first)
+        let userRef = doc(db, "users", user.uid);
+        let userSnapshot = await getDoc(userRef);
+        let collectionType = "users"; // Default to users
+
+        if (!userSnapshot.exists()) {
+            // Step 3: If not found in users, check organizations collection
+            userRef = doc(db, "organizations", user.uid);
+            userSnapshot = await getDoc(userRef);
+
+            if (userSnapshot.exists()) {
+                collectionType = "organizations";
+            }
+        }
+
+        // Step 4: If user exists, update verification status
+        if (userSnapshot.exists() && user.emailVerified) {
+            await setDoc(userRef, { isVerified: true }, { merge: true });
+            console.log(`User is verified, updated Firestore in ${collectionType} collection.`);
+        } else {
+            console.log("User is not verified, no update to Firestore.");
+        }
+
+        return { user, collectionType };
+    } catch (error) {
+        console.error("Error signing in:", error);
+        throw error;
+    }
 };
+
+
+
 
 export const doSignInAsGuest = () => {
     return signInAnonymously(auth);
@@ -52,41 +103,70 @@ export const doSignOut = () => {
 }
 
 export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
+    console.log("Inside doCreateOrgWithEmailAndPassword", formData);
+
     return createUserWithEmailAndPassword(auth, formData.orgConnectedEmail, formData.orgPassword).then(async (cred: any) =>  {
+        console.log("User created successfully:", cred.user.uid);
+
         const db = getFirestore(app);
         const orgRef = doc(db, "organizations", cred.user.uid);
+        const orgId = orgRef.id; //store the id to display the org
+        
+        try {
+            console.log("awaiting setdoc");
+            await setDoc(orgRef, {
+                    orgConnectedEmail: formData.orgConnectedEmail,
+                    //orgId: formData.orgName.replace(/\s/g, '_'), // https://stackoverflow.com/questions/5963182/how-to-remove-spaces-from-a-string-using-javascript
+                    orgId: orgId,
+                    orgLogo: formData.orgLogo || "",
+                    orgName: formData.orgName,
+                    orgAcronym: formData.orgAcronym || "No acryonym",
+                    //orgPictures: formData.orgPictures !== "" ? formData.orgPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],
+                    orgPictures: formData.orgPictures || [],
+                    orgBio: formData.orgBio || "No bio",
+                    // orgTags: formData.orgTags !== "" ? formData.orgTags.split(",").toString().split(",") : [],
+                    //orgTags: formData.orgTags !== "" ? formData.orgTags.toString().split(",").toString().split(",") : [],
+                    orgTags: formData.orgTags || ["Tag1: Will be expanded on", "Tag2: in a future sprint"],
 
-        await setDoc(orgRef, {
-                orgConnectedEmail: formData.orgConnectedEmail,
-                orgId: formData.orgName.replace(/\s/g, '_'), // https://stackoverflow.com/questions/5963182/how-to-remove-spaces-from-a-string-using-javascript
-                orgLogo: formData.orgLogo,
+
+                    dateFounded: formData.dateFounded || "2025",
+                    orgCollege: formData.orgLocation,
+                    //orgAffiliations: formData.orgAffiliations !== "" ? formData.orgAffiliations.toString().split(",") : [],
+                    orgAffiliations: formData.orgAffiliations || [],
+                    //orgEmails: formData.orgEmails !== "" ? formData.orgEmails.toString().split(",") : [],
+                    orgEmails: formData.orgEmails || "email@up.edu.ph",
+                    orgFacebook: formData.orgFacebook || "facebook.com",
+                    orgWebsite: formData.orgWebsite || "google.com",
+                    orgDescription: formData.orgDescription || "No description",
+                    orgScope: formData.orgScope,
+                    openForApplications: formData.openForApplications || true,
+                    members: {},
+                    applicants: {},
+                    aspiringApplicants: {},
+                    isVerified: false
+                });
+            
+                console.log("Successfully wrote organization data to Firestore");
+
+                try {
+                    await sendEmailVerification(cred.user);
+                    console.log("Verfication e-mail sent");
+                }
+                catch (error) {
+                    console.log("Error sending verification e-mail");
+                }
+
+            const userRef = doc(db, "organization-admins", cred.user.uid);
+            await setDoc(userRef, {
                 orgName: formData.orgName,
-                orgAcronym: formData.orgAcronym,
-                orgPictures: formData.orgPictures !== "" ? formData.orgPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],
-                orgBio: formData.orgBio,
-                // orgTags: formData.orgTags !== "" ? formData.orgTags.split(",").toString().split(",") : [],
-                orgTags: formData.orgTags !== "" ? formData.orgTags.toString().split(",").toString().split(",") : [],
-
-
-                dateFounded: formData.dateFounded,
-                orgLocation: formData.orgLocation,
-                orgAffiliations: formData.orgAffiliations !== "" ? formData.orgAffiliations.toString().split(",") : [],
-                orgEmails: formData.orgEmails !== "" ? formData.orgEmails.toString().split(",") : [],
-                orgFacebook: formData.orgFacebook,
-                orgWebsite: formData.orgWebsite,
-                orgDescription: formData.orgDescription,
-                orgScope: formData.orgScope,
-                openForApplications: formData.openForApplications,
-                members: {},
-                applicants: {},
-                aspiringApplicants: {},
+                orgConnectedEmail: formData.orgConnectedEmail
             });
 
-        const userRef = doc(db, "organization-admins", cred.user.uid);
-        await setDoc(userRef, {
-            orgName: formData.orgName,
-            orgConnectedEmail: formData.orgConnectedEmail
-        });
+            console.log("Successfully wrote admin data to Firestore");
+        }
+        catch (error){
+            console.error("Error writing to Firestore:", error);
+        }
     });
 }
 

@@ -5,7 +5,7 @@ import "./SignUp.css";
 import showEye from "../../assets/eye.png";
 import hideEye from "../../assets/hidden.png";
 import logo from "../../assets/logo_placeholder.png";
-import { doCreateUserWithEmailAndPassword } from "../../firebase/auth";
+import { doCreateUserWithEmailAndPassword, doCreateOrgWithEmailAndPassword } from "../../firebase/auth";
 
 export default function OrganizationSignUpForm() {
   const colleges = [
@@ -85,15 +85,19 @@ export default function OrganizationSignUpForm() {
 
     const userData = {
       ...formData,
-      organizationName: formData.organizationName,
-      college: formData.college,
-      organizationType: formData.organizationType,
-      email: formData.email,
-      password: formData.password,
+      orgName: formData.organizationName,
+      orgLocation: formData.college,
+      orgScope: formData.organizationType,
+      orgConnectedEmail: formData.email,
+      orgPassword: formData.password,
     };
 
+    console.log("Submitting userData: ",  userData);
+
     try {
-      await doCreateUserWithEmailAndPassword(userData);
+      console.log("Final userData before function call:", userData);
+
+      await doCreateOrgWithEmailAndPassword(userData);
       window.location.href = "/dashboard";
     } catch (e) {
       if (e.code === "auth/email-already-in-use") {
