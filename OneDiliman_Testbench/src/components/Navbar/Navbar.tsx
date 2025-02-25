@@ -215,7 +215,7 @@ function DisplayLink({ currentPage }) {
           </div>
 
           <Dropdown>
-          <Dropdown.Toggle variant="danger" id="dropdown-basic" className="custom-dropdown-button menu-padding">
+          <Dropdown.Toggle variant="danger" id="dropdown-basic" className="custom-dropdown-button menu-padding" data-testid="profile-dropdown">
           {/* <DisplayName /> <span style={{ marginRight: '2px' }}></span> */}
             {name}  
             {/* <br></br>
@@ -228,7 +228,7 @@ function DisplayLink({ currentPage }) {
                 <FontAwesomeIcon icon={faUser} /> <span style={{ marginLeft: '5px' }}> Profile </span></Dropdown.Item>
             <Dropdown.Item onClick={handleOpenFAQModal}> 
                 <FontAwesomeIcon icon={faCircleQuestion} /> <span style={{ marginLeft: '5px' }}> FAQ </span></Dropdown.Item>
-            <Dropdown.Item  onClick={handleLogOut}>
+            <Dropdown.Item  onClick={handleLogOut} data-testid="logout-button">
                 <FontAwesomeIcon icon={faArrowRightFromBracket} /> <span style={{ marginLeft: '5px' }}> Logout </span></Dropdown.Item>
           </Dropdown.Menu>
           </Dropdown>
