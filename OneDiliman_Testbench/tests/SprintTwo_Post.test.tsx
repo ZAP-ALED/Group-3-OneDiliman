@@ -40,7 +40,7 @@ async function logInUser() {
 
 async function logOut() {
   const user = userEvent.setup();
-  const dropdown = screen.queryAllByTestId("profile-dropdown");
+  const dropdown = screen.queryAllByTestId("profile-dropdown"); //look into this, why many profile dropdowns?
   await user.click(dropdown[0]);
   await user.click(screen.getByTestId("logout-button"));
 }
@@ -160,6 +160,7 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     await waitFor(() => {
       const deleteButtons = screen.queryAllByTestId("delete-post-button");
       expect(deleteButtons).toHaveLength(0);
-    }
-  );
+      }
+    );
+    await logOut();
   }, 15000);
