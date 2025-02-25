@@ -7,6 +7,7 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { fetchOrgData, fetchUserBookmarks, fetchUserData } from "../../components/FirebaseConnection";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 export default function DashboardPage() {
 
@@ -20,14 +21,20 @@ export default function DashboardPage() {
   const [openForAppFilterActive, setOpenForAppFilterActive] = useState(false);
   const [scopeActive, setScopeActive] = useState(false);
   const [tagActive, setTagActive] = useState(false);
+  //const [verified, setVerified] = useState<boolean | null>(null);
 
   const [selectedScope, setSelectedScope] = useState(null);
   const [selectedTags, setSelectedTags] = useState([]);
 
   const [databaseConnected, setDatabaseConnected] = useState(false);
+  const [uid, setUid] = useState<string | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const db = getFirestore();
+  const auth = getAuth();
 
-  const [uid, setUid] = useState("-1");
+  //const [uid, setUid] = useState("-1");
 
+  /* Original
   useEffect(() => {
     const auth = getAuth();
 
@@ -41,9 +48,24 @@ export default function DashboardPage() {
             setUid("-1");
         }
     })
-  }, [uid]);
+  }, [uid]); 
 
+  useEffect(() => {
+    const auth = getAuth();
 
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            await user.reload(); // Ensure latest verification status
+            setUid(user.uid);
+            setVerified(user.emailVerified); // Check if user is verified
+        } else {
+            setUid("-1");
+            setVerified(null);
+        }
+    });
+}, [uid]); */
+
+/*
   useEffect(() => {
     setOrgs([]); // Clear existing data before fetching new data
     fetchUserBookmarks(uid)
@@ -121,13 +143,155 @@ const filteredOrgs = orgs.filter(org =>
     // Update state
     setSelectedTags(updatedTags);
     setTagActive(updatedTagActive);
-  };
+  }; */
   
-  
+  useEffect(() => {
+    const auth = getAuth();
+    const db = getFirestore();
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            const userRef = doc(db, "users", user.uid);
+            const orgRef = doc(db, "organizations", user.uid);
+
+            try {
+                const [userSnapshot, orgSnapshot] = await Promise.all([
+                    getDoc(userRef),
+                    getDoc(orgRef),
+                ]);
+
+                let isVerified = false;
+
+                if (userSnapshot.exists()) {
+                    isVerified = userSnapshot.data().isVerified || false;
+                } else if (orgSnapshot.exists()) {
+                    isVerified = orgSnapshot.data().isVerified || false;
+                }
+
+                setUid(user.uid);
+                setVerified(isVerified);
+            } catch (error) {
+                console.error("Error checking verification status:", error);
+                setVerified(false);
+            }
+        } else {
+            setUid(null);
+            setVerified(null);
+        }
+    });
+}, []);
+
+useEffect(() => {
+    if (!uid) return;
+
+    setOrgs([]); // Clear existing data before fetching new data
+
+    fetchUserBookmarks(uid)
+        .then(bookmarks => {
+            console.log(bookmarks);
+            setUserBookmarks(bookmarks);
+        });
+/* old fetchOrg
+    fetchOrgData()
+        .then(data => {
+            const newData = data.map(item => ({
+                ...item,
+                starred: userBookmarks[item.id] || false,
+                id: item.id
+            }));
+            setOrgs(newData);
+            console.log(newData);
+            setDatabaseConnected(true);
+        })
+        .catch(error => {
+            setDatabaseConnected(false);
+            console.error("Error fetching organizations:", error);
+        });  */
+    fetchOrgData()
+      .then(data => {
+        const newData = data
+            .filter(item => item.isVerified) // Only keep verified orgs
+            .map(item => ({
+                ...item,
+                starred: userBookmarks[item.id] || false,
+                id: item.id
+            }));
+
+        setOrgs(newData);
+        console.log("Verified orgs:", newData);
+        setDatabaseConnected(true);
+    })
+    .catch(error => {
+        setDatabaseConnected(false);
+        console.error("Error fetching organizations:", error);
+    });
+    
+}, [uid]);
+
+const toggleStarred = (id: string) => {
+    setOrgs(orgs.map(org => 
+        org.id === id ? { ...org, starred: !org.starred } : org
+    ));
+};
+
+const filteredOrgs = orgs.filter(org =>
+    (!starredFilterActive || org.starred) &&
+    (org.orgName.toLowerCase().includes(query.toLowerCase()) ||
+        org.orgDescription.toLowerCase().includes(query.toLowerCase())) &&
+    (!selectedScope || org.orgTags.includes(selectedScope)) &&
+    (selectedTags.length === 0 || selectedTags.every(tag => org.orgTags.includes(tag)))
+);
+
+const sortedOrgs = [...filteredOrgs].sort((a, b) => {
+    return sortOrder === "asc"
+        ? a.orgName.localeCompare(b.orgName)
+        : b.orgName.localeCompare(a.orgName);
+});
+
+const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    setSortFilterActive(!sortFilterActive);
+};
+
+const toggleStarredFilter = () => {
+    setStarredFilterActive(!starredFilterActive);
+};
+
+const toggleOpenForAppFilter = () => {
+    setOpenForAppFilterActive(!openForAppFilterActive);
+};
+
+const handleScopeSelect = (scope: string) => {
+    setSelectedScope(prevScope => prevScope === scope ? null : scope);
+    setScopeActive(!scopeActive);
+};
+
+const handleTagSelect = (tag: string) => {
+    let updatedTags = selectedTags.includes(tag)
+        ? selectedTags.filter(t => t !== tag)
+        : [...selectedTags, tag];
+
+    setSelectedTags(updatedTags);
+    setTagActive(updatedTags.length > 0);
+};
 
   return (
     <div className="background-container"> 
       <Navbar currentPage={"dashboard"}/>
+      
+      
+      {verified === false && (
+    <div style={{
+        backgroundColor: "#ffcccb",
+        padding: "10px",
+        textAlign: "center",
+        color: "black",
+        fontWeight: "bold"
+    }}>
+        ❌ Your email is not verified. Please check your inbox.
+    </div>
+)}
+
       <Sidebar orgs={sortedOrgs} toggleStarred={toggleStarred} />
       <div className="header-container">
       <div className="container-md">
