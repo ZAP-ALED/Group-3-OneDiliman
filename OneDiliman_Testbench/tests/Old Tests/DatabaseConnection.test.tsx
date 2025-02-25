@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
-import DashboardPage from "../src/pages/Dashboard/DashboardPage";
+import DashboardPage from "../../src/pages/Dashboard/DashboardPage";
 
 describe("Should be connected to firebase", () => {
   it("fetched data from firebase should be mapped in the cards through the org bio", () => {

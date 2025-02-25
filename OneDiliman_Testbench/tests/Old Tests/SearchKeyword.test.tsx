@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
-import DashboardPage from "../src/pages/Dashboard/DashboardPage";
+import DashboardPage from "../../src/pages/Dashboard/DashboardPage";
 
 describe("DashboardPage Filtering", () => {
   it("should initially display all organizations", () => {

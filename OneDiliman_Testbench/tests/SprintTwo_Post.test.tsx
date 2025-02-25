@@ -24,7 +24,8 @@ async function logInUser() {
 }
 
 
-test('navigate to org page from dashboard, create a post, delete a post', async () => {
+test('navigate to org page from dashboard, create a post, delete a post', async  () => {
+  setTimeout(() => {10000});
   await logInUser();
   cleanup();
 
@@ -50,6 +51,11 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     expect(about).toBeInTheDocument();
   });
 
+    // Check current amount of test posts (it may contain any content)
+    const postsCurrent = screen.queryAllByText(/Test Post (SprintTwo_Post.test.tsx)/i);
+    const postsCurrentLength = postsCurrent.length;
+    console.log(postsCurrentLength);
+
     await fireEvent.click(screen.getByText(/Create New Post/i));
     await user.type(screen.getByPlaceholderText(/Title/i), "Test Post (SprintTwo_Post.test.tsx)");
     await user.type(screen.getByPlaceholderText(/Content/i), "This is a test post. Courtesy of SprintTwo_Post.test.tsx");
@@ -60,12 +66,11 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     // Wait for the post to be created and get the post ID from the state
 
     await waitFor(() => {
-      const post = screen.getByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
-      expect(post).toBeInTheDocument();
+      const postsCreated = screen.queryAllByText(/Test Post (SprintTwo_Post.test.tsx)/i);
+      expect(postsCreated.length).toBeGreaterThan((postsCurrentLength));
 
     });
 
-    // Delete the specific post using the captured post ID
     // Delete the specific post using the first delete button found
     const deleteButtons = screen.queryAllByTestId("delete-post-button");
     if (deleteButtons.length > 0) {
@@ -73,7 +78,7 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     }
 
     await waitFor(() => {
-      const post = screen.queryByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
-      expect(post).toBeNull();
+      const postsDeleted = screen.queryAllByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
+      expect(postsDeleted.length).toBe(postsCurrentLength);
     });
   });

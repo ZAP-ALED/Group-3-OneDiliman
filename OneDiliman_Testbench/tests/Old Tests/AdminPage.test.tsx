@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import AdminPage from '../src/pages/AdminPage/AdminPage.tsx'
+import AdminPage from '../../src/pages/AdminPage/AdminPage.tsx'
 import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 

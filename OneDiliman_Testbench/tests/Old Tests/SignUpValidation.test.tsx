@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import SignInPage from '../src/pages/SignUp/SignUpPage.tsx'
+import SignInPage from '../../src/pages/SignUp/SignUpPage.tsx'
 import { MemoryRouter } from 'react-router-dom';
-import SignUpForm from '../src/pages/SignUp/SignUpForm.tsx';
+import SignUpForm from '../../src/pages/SignUp/SignUpForm.tsx';
 import userEvent from '@testing-library/user-event';
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex

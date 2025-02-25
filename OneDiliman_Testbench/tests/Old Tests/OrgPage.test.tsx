@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, waitFor, user, cleanup, fireEvent } from '@testing-library/react';
-import LogInPage from '../src/pages/LogIn/LoginPage.tsx';
-import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
-import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
+import LogInPage from '../../src/pages/LogIn/LoginPage.tsx';
+import DashboardPage from '../../src/pages/Dashboard/DashboardPage.tsx';
+import OrgPage from '../../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 
