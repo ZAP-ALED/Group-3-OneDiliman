@@ -122,7 +122,7 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     orgName: formData.orgName,
                     orgAcronym: formData.orgAcronym || "No acryonym",
                     //orgPictures: formData.orgPictures !== "" ? formData.orgPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],
-                    orgPictures: formData.orgPictures || [],
+                    orgPictures: formData.orgPictures || ["https://imgur.com/E6u04LW"],
                     orgBio: formData.orgBio || "No bio",
                     // orgTags: formData.orgTags !== "" ? formData.orgTags.split(",").toString().split(",") : [],
                     //orgTags: formData.orgTags !== "" ? formData.orgTags.toString().split(",").toString().split(",") : [],
