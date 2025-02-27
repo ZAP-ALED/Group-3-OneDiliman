@@ -288,7 +288,7 @@ const handleTagSelect = (tag: string) => {
         color: "black",
         fontWeight: "bold"
     }}>
-        ❌ Your email is not verified. Please check your inbox.
+        
     </div>
 )}
 
