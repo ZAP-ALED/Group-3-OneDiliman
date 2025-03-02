@@ -251,3 +251,83 @@ export class Post {
           return this.postTime;
      }
 }
+
+// Event Entity
+export class Event {
+     private eventId: string;
+     private eventName: string;
+     private eventDescription: string;
+     private eventPictures: string[];
+     private eventTags: string[];
+     private eventDate: string;
+     private eventTime: string;
+     private eventLocation: string;
+     private eventOwner: string;
+     private willNotify: string[]; // Notification List, to be implemented on sprint 4
+
+     constructor (
+          eventId: string,
+          eventName: string,
+          eventDescription: string,
+          eventPictures: string[],
+          eventTags: string[],
+          eventDate: string,
+          eventTime: string,
+          eventLocation: string,
+          eventOwner: string,
+          willNotify: string[] = [],
+     ) {
+          this.eventId = eventId;
+          this.eventName = eventName;
+          this.eventDescription = eventDescription;
+          this.eventPictures = eventPictures;
+          this.eventTags = eventTags;
+          this.eventDate = eventDate;
+          this.eventTime = eventTime;
+          this.eventLocation = eventLocation;
+          this.eventOwner = eventOwner;
+          this.willNotify = willNotify;
+     }
+
+     public getWillNotify() {
+          return this.willNotify;
+     }
+
+     public getEventId() {
+          return this.eventId;
+     }
+
+     public getEventOwner() {
+          return this.eventOwner;
+     }
+     
+     public getEventName() {
+          return this.eventName;
+     }
+     
+     public getEventDescription() {
+          return this.eventDescription;
+     }
+     
+     public getEventPictures() {
+          const pics = this.eventPictures;
+          return pics;
+     }
+     
+     public getEventTags() {
+          const tags = this.eventTags;
+          return tags;
+     }
+     
+     public getEventDate() {
+          return this.eventDate;
+     }
+     
+     public getEventTime() {
+          return this.eventTime;
+     }
+
+     public getEventLocation() {
+          return this.eventLocation;
+     }
+}
