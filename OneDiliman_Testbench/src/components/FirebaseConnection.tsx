@@ -706,3 +706,33 @@ export async function deletePost(
 
   // alert("Post has been archived");
 }
+
+export async function addEventData(
+  eventOwner: string,
+  eventId: string,
+  eventName: string,
+  eventDescription: string,
+  eventLocation: string,
+  eventPictures: string[],
+  eventDate: string,
+  eventTime: string,
+  eventTags: string[] = [],
+  willNotify: string[] = []
+) { 
+  const db = getFirestore();
+
+  const docRef = await addDoc(collection(db, "events"), {
+    eventOwner,
+    eventId,
+    eventName,
+    eventDescription,
+    eventLocation,
+    eventPictures,
+    eventDate,
+    eventTime,
+    eventTags,
+    willNotify
+  });
+
+  return docRef.id;
+};

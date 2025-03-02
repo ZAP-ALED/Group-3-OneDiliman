@@ -15,9 +15,10 @@ import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import Navbar from '../../components/Navbar/Navbar';
 import PostCard from './PostCard';
-import { Organization, Post } from '../../components/DatabaseEntities';
-import { addPostData } from '../../components/FirebaseConnection';
+import { Organization, Post, Event } from '../../components/DatabaseEntities';
+import { addPostData, addEventData } from '../../components/FirebaseConnection';
 import './OrgPage.css';
+import EventCard from './EventCard';
 
 interface Post {
   id: string;
@@ -31,6 +32,20 @@ interface Post {
 }
 
 type EditableOrgData = Partial<Organization>;
+
+export interface Event {
+  id: string;
+  eventId: string;
+  eventOwner: string;
+  eventName: string;
+  eventDescription: string;
+  eventLocation: string;
+  eventPictures: string[];
+  eventTags: string[];
+  eventDate: string;
+  eventTime: string;
+  willNotify: string[];
+}
 
 export default function OrgPage() {
   const params = useParams();
@@ -63,9 +78,23 @@ export default function OrgPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
 
+  const [events, setEvents] = useState<Event[]>([]);
+  const [newEvent, setNewEvent] = useState<Partial<Event>>({
+    eventName: '',
+    eventDescription: '',
+    eventLocation: '',
+    eventPictures: [],
+    eventDate: '',
+    eventTime: '',
+    eventTags: [],
+    willNotify: []
+  });
+  const [showEventModal, setShowEventModal] = useState(false);
+
   useEffect(() => {
     const auth = getAuth();
     let postColl: () => void;
+    let eventsColl: () => void;
 
   
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -178,6 +207,35 @@ export default function OrgPage() {
           }
         );
 
+       eventsColl = onSnapshot(
+          collection(db, 'events'),
+          (snapshot) => {
+            const eventsData = snapshot.docs
+              .filter(doc => doc.data().eventOwner === params.orgId) 
+              .map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  eventId: doc.id,
+                  eventOwner: data.eventOwner || '',
+                  eventName: data.eventName || '',
+                  eventDescription: data.eventDescription || '',
+                  eventLocation: data.eventLocation || '',
+                  eventPictures: data.eventPictures || [],
+                  eventTags: data.eventTags || [],
+                  eventDate: data.eventDate || '',
+                  eventTime: data.eventTime || '',
+                  willNotify: data.willNotify || []
+                };
+              });
+
+            setEvents(eventsData.sort((a, b) => 
+              new Date(b.eventDate + ' ' + b.eventTime).getTime() - 
+              new Date(a.eventDate + ' ' + a.eventTime).getTime()
+            ));
+          }
+        );
+
         setLoading(false);
       } catch (err) {
         console.error('Error:', err);
@@ -189,6 +247,7 @@ export default function OrgPage() {
     return () => {
       unsubscribe();
       if (postColl) postColl();
+      if (eventsColl) eventsColl();
     };
   }, [params.orgId]);
 
@@ -294,6 +353,35 @@ export default function OrgPage() {
 
   const handleUpdateOrgInfo = async () => {
   };
+
+  const handleCreateEvent = async () => {
+    const eventId = doc(collection(db, 'events')).id;
+
+    await addEventData(
+      params.orgId!,
+      eventId,
+      newEvent.eventName,
+      newEvent.eventDescription,
+      newEvent.eventLocation,
+      newEvent.eventPictures || [],
+      newEvent.eventDate,
+      newEvent.eventTime,
+      newEvent.eventTags || []
+    );
+
+    setShowEventModal(false);
+    setNewEvent({
+      eventName: '',
+      eventDescription: '',
+      eventLocation:'',
+      eventPictures: [],
+      eventDate: '',
+      eventTime: '',
+      eventTags: [],
+    });
+  };
+
+
 
   if (loading) {
     return (
@@ -541,6 +629,36 @@ export default function OrgPage() {
                       )}
                     </div>
                   </Tab>
+                  
+                  {/* events */}
+                  <Tab eventKey="events" title="Events" data-testid="events-tab">
+                    <div className="p-4">
+                      {isUserAnOrgAdmin && (
+                        <button 
+                          className="btn btn-primary mb-4"
+                          onClick={() => setShowEventModal(true)}
+                        >
+                          <FontAwesomeIcon icon={faPlus} className="me-2"/>
+                          Create New Event
+                        </button>
+                      )}
+                      
+                      {events.length === 0 ? (
+                        <div className="empty-events">
+                          <p className="text-muted">No upcoming events</p>
+                        </div>
+                      ) : (
+                        <div className="events-list">
+                          {events.map(event => (
+                            <EventCard
+                              key={event.id}
+                              event={event}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Tab>
                 </Tabs>
               </div>
             </div>
@@ -764,6 +882,139 @@ export default function OrgPage() {
             </button>
           </Modal.Footer>
         </Modal>
+        
+        {/* event modal */}
+        <Modal show={showEventModal} onHide={() => setShowEventModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Create New Event</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div className="mb-3">
+            <label className="form-label">Event Name</label>
+            <input 
+              type="text" 
+              className="form-control"
+              value={newEvent.eventName}
+              onChange={(e) => setNewEvent({...newEvent, eventName: e.target.value})}
+              placeholder="Name"
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Description</label>
+            <textarea 
+              className="form-control"
+              rows={5}
+              value={newEvent.eventDescription}
+              onChange={(e) => setNewEvent({...newEvent, eventDescription: e.target.value})}
+              placeholder="Describe your event..."
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Location</label>
+            <input 
+              type="text" 
+              className="form-control"
+              value={newEvent.eventLocation}
+              onChange={(e) => setNewEvent({...newEvent, eventLocation: e.target.value})}
+              placeholder="Event location"
+            />
+          </div>
+          <div className="row mb-3">
+            <div className="col">
+              <label className="form-label">Date</label>
+              <input 
+                type="date" 
+                className="form-control"
+                value={newEvent.eventDate}
+                onChange={(e) => setNewEvent({...newEvent, eventDate: e.target.value})}
+              />
+            </div>
+            <div className="col">
+              <label className="form-label">Time</label>
+              <input 
+                type="time" 
+                className="form-control"
+                value={newEvent.eventTime}
+                onChange={(e) => setNewEvent({...newEvent, eventTime: e.target.value})}
+              />
+            </div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Tags (comma separated)</label>
+            <input 
+              type="text" 
+              className="form-control"
+              value={newEvent.eventTags?.join(', ')}
+              onChange={(e) => setNewEvent({
+                ...newEvent, 
+                eventTags: e.target.value.split(',').map(tag => tag.trim())
+              })}
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label d-block">Images</label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                if (e.target.files) {
+                  Promise.all(
+                    Array.from(e.target.files).map(file => convertToBase64(file))
+                  ).then(base64Images => {
+                    setNewEvent(prev => ({
+                      ...prev,
+                      eventPictures: [...(prev.eventPictures || []), ...base64Images]
+                    }));
+                  });
+                }
+              }}
+              className="d-none"
+              id="event-image-upload"
+            />
+            <label htmlFor="event-image-upload" className="btn btn-outline-secondary">
+              <FontAwesomeIcon icon={faImage} className="me-2" />
+              {isUploading ? 'Uploading...' : 'Add Images'}
+            </label>
+            {newEvent.eventPictures && newEvent.eventPictures.length > 0 && (
+              <div className="mt-2 d-flex flex-wrap gap-2">
+                {newEvent.eventPictures.map((img, index) => (
+                  <div key={index} className="position-relative">
+                    <img 
+                      src={img} 
+                      alt={`Upload preview ${index + 1}`} 
+                      style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                    />
+                    <button 
+                      className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                      onClick={() => setNewEvent({
+                        ...newEvent,
+                        eventPictures: newEvent.eventPictures?.filter((_, i) => i !== index)
+                      })}
+                    >
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowEventModal(false)}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={handleCreateEvent}
+            data-testid="create-event-button"
+          >
+            Create Event
+          </button>
+        </Modal.Footer>
+      </Modal>
       </div>
     </div>
   );
