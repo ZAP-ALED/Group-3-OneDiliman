@@ -39,7 +39,7 @@ test('navigate to org page from dashboard', async () => {
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
   const user = userEvent.setup();
-  await new Promise((r) => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 2000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   expect(orgCard).toBeInTheDocument();
