@@ -4,6 +4,7 @@ import {
   faPen, 
   faTrash,
 } from '@fortawesome/free-solid-svg-icons';
+import Modal from 'react-bootstrap/Modal';
 import './PostCard.css';
 
 interface Post {
@@ -26,6 +27,8 @@ interface PostCardDeets {
 
 const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onDelete }) => {
   const [showFullContent, setShowFullContent] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
 
   const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -37,6 +40,13 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
   const handleCardClick = () => {
     setShowFullContent(!showFullContent);
   };
+
+  const handleImageClick = (e: React.MouseEvent, imageUrl: string) => {
+    e.stopPropagation();
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
 
   const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
     e.stopPropagation();
@@ -73,6 +83,7 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
                   src={imageUrl} 
                   alt={`${post.postTitle} - Image ${index + 1}`}
                   className="post-image"
+                  onClick={(e) => handleImageClick(e, imageUrl)}
                 />
               ))}
             </div>
@@ -105,6 +116,27 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
           )}
         </div>
       </div>
+    
+      <Modal 
+        show={showImageModal} 
+        onHide={() => setShowImageModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+        </Modal.Header>
+        <Modal.Body className="text-center p-0">
+          <img 
+            src={selectedImage} 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '80vh', 
+              objectFit: 'contain',
+              margin: '0 auto'
+            }}
+          />
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

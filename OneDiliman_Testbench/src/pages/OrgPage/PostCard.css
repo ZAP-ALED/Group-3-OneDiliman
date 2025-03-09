@@ -214,3 +214,27 @@ transition: transform 0.2s ease;
 .posts-list .post-card:hover {
 transform: translateY(-2px);
 }
+    
+.post-image:hover {
+cursor: pointer;
+opacity: 0.9;
+transform: scale(1.02);
+transition: opacity 0.2s ease, transform 0.2s ease;
+box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-body img {
+display: block;
+margin: 0 auto;
+}
+
+.modal-dialog {
+max-width: 90%;
+margin: 1.75rem auto;
+}
+
+@media (min-width: 992px) {
+  .modal-lg {
+  max-width: 80%;
+  }
+}
