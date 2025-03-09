@@ -79,6 +79,7 @@ test('as org, create an event', async () => {
     await new Promise((r) => setTimeout(r, 2000));
     //Check current amount of test events
     const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
+    console.log(eventsCurrent.length);
 
     await fireEvent.click(screen.getByText(/Create New Event/));
     await user.type(screen.getByPlaceholderText(/Name/i), "Test Event (SprintThree.test.tsx)");
@@ -99,15 +100,17 @@ test('as org, create an event', async () => {
     await fireEvent.change(inputImages, { target: {files: [file]}});
 
     await user.click(screen.getByTestId("create-event-button"));
+    await new Promise((r) => setTimeout(r, 2000));
 
     await waitFor(() => {
       const eventsCreated = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
       expect(eventsCreated.length).toBeGreaterThan(eventsCurrent.length);
+      console.log(eventsCreated.length);
     })
 
     await waitFor(() => {
-      const uploadedImage = screen.getByAltText('Upload preview 1');
-      expect(uploadedImage).toBeInTheDocument();
+      const uploadedImage = screen.queryAllByAltText('Test Event (SprintThree.test.tsx) - Image 1');
+      expect(uploadedImage.length).toBeGreaterThan(0)
     });
 
     await logOut();
@@ -116,7 +119,7 @@ test('as org, create an event', async () => {
 
 test('view events as user', async () => {
   await logInUser();
-  await cleanup;
+  cleanup;
 
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
