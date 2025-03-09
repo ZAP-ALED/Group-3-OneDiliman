@@ -44,3 +44,71 @@ async function logOut() {
   await user.click(dropdown[0]);
   await user.click(screen.getByTestId("logout-button"));
 }
+
+test('navigate to orgpage from dashboard, create an event', async () => {
+    await logInOrg();
+    cleanup;
+
+    await render(
+        <MemoryRouter><DashboardPage /></MemoryRouter>);
+    const user = userEvent.setup();
+    await new Promise((r) => setTimeout(r, 2000));
+
+    const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+    expect(orgCard).toBeInTheDocument();
+
+    await fireEvent.click(orgCard);
+    await render(
+        <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+            <Routes>
+                <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+            </Routes>
+        </MemoryRouter>
+    );
+
+    await waitFor(() => {
+        const about = screen.getByText(/Facebook/i);
+        expect(about).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+        const events = screen.getByTestId("events-tab");
+        fireEvent.click(events);
+    })
+
+    await new Promise((r) => setTimeout(r, 2000));
+    //Check current amount of test events
+    const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
+
+    await fireEvent.click(screen.getByText(/Create New Event/));
+    await user.type(screen.getByPlaceholderText(/Name/i), "Test Event (SprintThree.test.tsx)");
+    await user.type(screen.getByPlaceholderText(/Describe your event.../i), "This is a test event. Courtesy of SprintThree.test.tsx");
+    await user.type(screen.getByPlaceholderText(/Event location/i), "Test location");
+    
+    const datetime = new Date();
+    const date =  `2026-10-10`
+    const time = `10:00`
+
+    const inputDate = screen.getByTestId(/input-date/i);
+    const inputTime = screen.getByTestId(/input-time/i)
+    await fireEvent.change(inputDate, {target: {value: date }})
+    await fireEvent.change(inputTime, {target: {value: time }})
+    
+    const file = new File(['dummy content'], 'checkmark.png', { type: 'image/png'});
+    const inputImages = screen.getByLabelText(/Add Images/i);
+    await fireEvent.change(inputImages, { target: {files: [file]}});
+
+    await user.click(screen.getByTestId("create-event-button"));
+
+    await waitFor(() => {
+      const eventsCreated = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
+      expect(eventsCreated.length).toBeGreaterThan(eventsCurrent.length);
+    })
+
+    await waitFor(() => {
+      const uploadedImage = screen.getByAltText('Upload preview 1');
+      expect(uploadedImage).toBeInTheDocument();
+    });
+
+
+}, 15000)
