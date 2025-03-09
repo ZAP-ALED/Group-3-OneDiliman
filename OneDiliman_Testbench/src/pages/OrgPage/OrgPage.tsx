@@ -927,6 +927,7 @@ export default function OrgPage() {
                 className="form-control"
                 value={newEvent.eventDate}
                 onChange={(e) => setNewEvent({...newEvent, eventDate: e.target.value})}
+                data-testid="input-date"
               />
             </div>
             <div className="col">
@@ -936,6 +937,7 @@ export default function OrgPage() {
                 className="form-control"
                 value={newEvent.eventTime}
                 onChange={(e) => setNewEvent({...newEvent, eventTime: e.target.value})}
+                data-testid="input-time"
               />
             </div>
           </div>
