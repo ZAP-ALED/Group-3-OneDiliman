@@ -45,9 +45,9 @@ async function logOut() {
   await user.click(screen.getByTestId("logout-button"));
 }
 
-test('navigate to orgpage from dashboard, create an event', async () => {
+test('as org, create an event', async () => {
     await logInOrg();
-    cleanup;
+    await cleanup;
 
     await render(
         <MemoryRouter><DashboardPage /></MemoryRouter>);
@@ -110,5 +110,44 @@ test('navigate to orgpage from dashboard, create an event', async () => {
       expect(uploadedImage).toBeInTheDocument();
     });
 
+    await logOut();
 
 }, 15000)
+
+test('view events as user', async () => {
+  await logInUser();
+  await cleanup;
+
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>);
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 2000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+
+  await fireEvent.click(orgCard);
+  await render(
+      <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+          <Routes>
+              <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+          </Routes>
+      </MemoryRouter>
+  );
+
+  await waitFor(() => {
+      const about = screen.getByText(/Facebook/i);
+      expect(about).toBeInTheDocument();
+  });
+
+  await waitFor(() => {
+      const events = screen.getByTestId("events-tab");
+      fireEvent.click(events);
+  })
+
+  await new Promise((r) => setTimeout(r, 2000));
+  //Check current amount of test events
+  const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
+  expect(eventsCurrent.length).toBeGreaterThan(0);
+
+})
