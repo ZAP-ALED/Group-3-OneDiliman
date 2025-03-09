@@ -7,7 +7,7 @@ import {
   faClock,
   faMapMarkerAlt
 } from '@fortawesome/free-solid-svg-icons';
-import './PostCard.css'; 
+import './EventCard.css'; 
 
 interface Event {
   id: string;
@@ -25,12 +25,13 @@ interface Event {
 
 interface EventCardDeets {
   event: Event;
-  // isUserAnOrgAdmin: boolean;
-  // onEdit: (post: Post) => void;
-  // onDelete: (postId: string) => void;
+  isUserAnOrgAdmin: boolean;
+  onEdit: (event: Event) => void;
+  onDelete: (eventID: string) => void;
 }
 
-const EventCard: React.FC<EventCardDeets> = ({ event }) => {
+
+const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, onDelete }) => {
   const [showFullContent, setShowFullContent] = useState(false);
 
   
@@ -51,8 +52,8 @@ const EventCard: React.FC<EventCardDeets> = ({ event }) => {
   };
 
   return (
-    <div className="post-card" onClick={handleCardClick}>
-      <div className="post-content">
+    <div className="event-card" onClick={handleCardClick}>
+      <div className="event-content">
         <div className="date-section">
           <span>
             <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
@@ -70,9 +71,9 @@ const EventCard: React.FC<EventCardDeets> = ({ event }) => {
           )}
         </div>
 
-        <div className="post-main-content">
+        <div className="event-main-content">
           <div className="text-content">
-            <h2 className="post-title">{event.eventName || 'Untitled Event'}</h2>
+            <h2 className="event-title">{event.eventName || 'Untitled Event'}</h2>
 
             <div className="content-wrapper">
               <div className={`content-text ${!showFullContent ? 'collapsed' : ''}`}>
@@ -85,13 +86,13 @@ const EventCard: React.FC<EventCardDeets> = ({ event }) => {
           </div>
 
           {event.eventPictures && Array.isArray(event.eventPictures) && event.eventPictures.length > 0 && (
-          <div className="post-image-container">
+          <div className="event-image-container">
             {event.eventPictures.map((imageUrl, index) => (
               <img 
                 key={index}
                 src={imageUrl} 
                 alt={`${event.eventName || 'Event'} - Image ${index + 1}`}
-                className="post-image"
+                className="event-image"
               />
             ))}
           </div>
@@ -99,11 +100,29 @@ const EventCard: React.FC<EventCardDeets> = ({ event }) => {
         </div>
 
         <div className="bottom-meta">
-          <div className="post-tags">
+          <div className="event-tags">
             {event.eventTags && event.eventTags.map((tag, index) => (
               <span key={index} className="type-badge">{tag}</span>
             ))}
           </div>
+          
+          {isUserAnOrgAdmin && (
+            <div className="action-buttons">
+              <button
+                className="action-button"
+                onClick={(e) => handleButtonClick(e, () => onEdit(event))}
+              >
+                <FontAwesomeIcon icon={faPen} />
+              </button>
+              <button
+                className="action-button delete"
+                onClick={(e) => handleButtonClick(e, () => onDelete(event.id))}
+                data-testid="delete-event-button"
+              >
+                <FontAwesomeIcon icon={faTrash} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -90,6 +90,8 @@ export default function OrgPage() {
     willNotify: []
   });
   const [showEventModal, setShowEventModal] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+
 
   useEffect(() => {
     const auth = getAuth();
@@ -381,6 +383,12 @@ export default function OrgPage() {
     });
   };
 
+  const handleDeleteEvent = {
+  }
+
+  const handleEditEvent =  {
+  };
+
 
 
   if (loading) {
@@ -653,6 +661,9 @@ export default function OrgPage() {
                             <EventCard
                               key={event.id}
                               event={event}
+                              isUserAnOrgAdmin={isUserAnOrgAdmin}
+                              onEdit={setEditingEvent}
+                              onDelete={handleDeleteEvent}
                             />
                           ))}
                         </div>
@@ -1017,6 +1028,157 @@ export default function OrgPage() {
           </button>
         </Modal.Footer>
       </Modal>
+
+        {/* edit event modal */}
+        <Modal 
+          show={editingEvent !== null} 
+          onHide={() => setEditingEvent(null)}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Edit Event</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            {editingEvent && (
+              <>
+                <div className="mb-3">
+                  <label className="form-label">Event Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingEvent.eventName}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      eventName: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={5}
+                    value={editingEvent.eventDescription}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      eventDescription: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Location</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingEvent.eventLocation}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      eventLocation: e.target.value
+                    })}
+                  />
+                </div>
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Date</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={editingEvent.eventDate}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        eventDate: e.target.value
+                      })}
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Time</label>
+                    <input
+                      type="time"
+                      className="form-control"
+                      value={editingEvent.eventTime}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        eventTime: e.target.value
+                      })}
+                    />
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <label className="form-label">Tags</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editingEvent.eventTags.join(', ')}
+                    onChange={(e) => setEditingEvent({
+                      ...editingEvent,
+                      eventTags: e.target.value.split(',').map(tag => tag.trim())
+                    })}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label d-block">Images</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        Promise.all(
+                          Array.from(e.target.files).map(file => convertToBase64(file))
+                        ).then(base64Images => {
+                          setEditingEvent(prev => ({
+                            ...prev!,
+                            eventPictures: [...(prev!.eventPictures || []), ...base64Images]
+                          }));
+                        });
+                      }
+                    }}
+                    className="d-none"
+                    id="edit-event-image-upload"
+                  />
+                  <label htmlFor="edit-event-image-upload" className="btn btn-outline-secondary">
+                    <FontAwesomeIcon icon={faImage} className="me-2" />
+                    {isUploading ? 'Uploading...' : 'Add Images'}
+                  </label>
+                  {editingEvent.eventPictures && editingEvent.eventPictures.length > 0 && (
+                    <div className="mt-2 d-flex flex-wrap gap-2">
+                      {editingEvent.eventPictures.map((img, index) => (
+                        <div key={index} className="position-relative">
+                          <img 
+                            src={img} 
+                            alt={`Upload preview ${index + 1}`} 
+                            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                          />
+                          <button 
+                            className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                            onClick={() => setEditingEvent(prev => ({
+                              ...prev!,
+                              eventPictures: prev!.eventPictures.filter((_, i) => i !== index)
+                            }))}
+                          >
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => setEditingEvent(null)}
+            >
+              Cancel
+            </button>
+            <button 
+              className="btn btn-primary"
+              onClick={() => editingEvent && handleEditEvent(editingEvent)}
+            >
+              Save Changes
+            </button>
+          </Modal.Footer>
+        </Modal>
       </div>
     </div>
   );
