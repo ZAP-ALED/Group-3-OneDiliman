@@ -287,13 +287,28 @@ export default function OrgPage() {
   };
 
   const handleEditPost = async (post: Post) => {
-    };
-
+    try {
+      const postDoc = doc(db, 'posts', post.id);
+      await updateDoc(postDoc, {
+        postTitle: post.postTitle,
+        postContent: post.postContent,
+        postTags: post.postTags,
+        postPictures: post.postPictures,
+      });
+      alert('Post updated successfully!');
+      setEditingPost(null);
+    } catch (error) {
+      console.error('Error updating post:', error);
+      alert('Failed to update post: ' + (error as Error).message);
+    }
+  };
 
   // Prints the post id to the console (Returns Promise<void>)
   const handleDeletePost = async (postId: string): Promise<void> => {
-    console.log(postId);
-    
+    if (!window.confirm('Are you sure you want to delete this post?')) {
+      return;
+    }
+  
     try {
       const postDoc = doc(db, 'posts', postId);
       const postSnapshot = await getDoc(postDoc);
@@ -383,10 +398,40 @@ export default function OrgPage() {
     });
   };
 
-  const handleDeleteEvent = {
-  }
+  const handleDeleteEvent = async (eventId: string): Promise<void> => {
+    if (!window.confirm('Are you sure you want to delete this event?')) {
+      return;
+    }
+  
+    try {
+      const eventDoc = doc(db, 'events', eventId);
+      await deleteDoc(eventDoc);
+      console.log('Event deleted successfully.');
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert('Failed to delete event: ' + (error as Error).message);
+    }
+  };
 
-  const handleEditEvent =  {
+  // Edit event
+  const handleEditEvent = async (event: Event) => {
+    try {
+      const eventDoc = doc(db, 'events', event.id);
+      await updateDoc(eventDoc, {
+        eventName: event.eventName,
+        eventDescription: event.eventDescription,
+        eventLocation: event.eventLocation,
+        eventPictures: event.eventPictures,
+        eventDate: event.eventDate,
+        eventTime: event.eventTime,
+        eventTags: event.eventTags,
+      });
+      alert('Event updated successfully!');
+      setEditingEvent(null);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      alert('Failed to update event: ' + (error as Error).message);
+    }
   };
 
 
