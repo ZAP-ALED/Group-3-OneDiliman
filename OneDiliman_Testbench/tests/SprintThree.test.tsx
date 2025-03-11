@@ -153,4 +153,6 @@ test('view events as user', async () => {
   const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
   expect(eventsCurrent.length).toBeGreaterThan(0);
 
-})
+}, 10000)
+
+test('as org, edit an event')
