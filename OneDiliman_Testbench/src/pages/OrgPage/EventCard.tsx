@@ -3,11 +3,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPen, 
   faTrash,
-  faCalendarAlt,
+  faCalendarDay,
   faClock,
-  faMapMarkerAlt
+  faLocationDot,
 } from '@fortawesome/free-solid-svg-icons';
 import './EventCard.css'; 
+import Modal from 'react-bootstrap/Modal';
 
 interface Event {
   id: string;
@@ -30,17 +31,17 @@ interface EventCardDeets {
   onDelete: (eventID: string) => void;
 }
 
-
 const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, onDelete }) => {
   const [showFullContent, setShowFullContent] = useState(false);
-
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState('');
   
   const formatDate = (date: string) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric'
-    }).format(new Date(date));
-  }
+    });
+  };
 
   const handleCardClick = () => {
     setShowFullContent(!showFullContent);
@@ -51,80 +52,113 @@ const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, 
     action();
   };
 
+  const handleImageClick = (e: React.MouseEvent, imageUrl: string) => {
+    console.log('image', imageUrl); 
+    e.stopPropagation();
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
+
   return (
     <div className="event-card" onClick={handleCardClick}>
       <div className="event-content">
-        <div className="date-section">
-          <span>
-            <FontAwesomeIcon icon={faCalendarAlt} className="me-2" />
-            {formatDate(event.eventDate)}
-          </span>
-          <span className="time">
-            <FontAwesomeIcon icon={faClock} className="ms-3 me-2" />
-            {event.eventTime || 'No time'}
-          </span>
-          {event.eventLocation && (
-            <span className="location ms-3">
-              <FontAwesomeIcon icon={faMapMarkerAlt} className="me-2" />
-              {event.eventLocation}
-            </span>
-          )}
-        </div>
-
-        <div className="event-main-content">
-          <div className="text-content">
-            <h2 className="event-title">{event.eventName || 'Untitled Event'}</h2>
-
-            <div className="content-wrapper">
-              <div className={`content-text ${!showFullContent ? 'collapsed' : ''}`}>
-                {event.eventDescription || 'No description available.'}
-              </div>
-              {!showFullContent && event.eventDescription && event.eventDescription.length > 240 && (
-                <div className="content-fade" />
-              )}
-            </div>
-          </div>
-
-          {event.eventPictures && Array.isArray(event.eventPictures) && event.eventPictures.length > 0 && (
-          <div className="event-image-container">
-            {event.eventPictures.map((imageUrl, index) => (
-              <img 
-                key={index}
-                src={imageUrl} 
-                alt={`${event.eventName || 'Event'} - Image ${index + 1}`}
-                className="event-image"
-              />
-            ))}
+        <div className="event-title">{event.eventName || 'Untitled Event'}</div>
+        {isUserAnOrgAdmin && (
+          <div className="admin-actions">
+            <button
+              className="admin-action-button"
+              onClick={(e) => handleButtonClick(e, () => onEdit(event))}
+            >
+              <FontAwesomeIcon icon={faPen} />
+            </button>
+            <button
+              className="admin-action-button delete"
+              onClick={(e) => handleButtonClick(e, () => onDelete(event.id))}
+              data-testid="delete-event-button"
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
           </div>
         )}
+      </div>
+      
+      {event.eventPictures && event.eventPictures.length > 0 && (
+        <div className="event-image-container">
+          <img 
+            src={event.eventPictures[0]} 
+            alt={event.eventName || 'Event'}
+            className="event-banner-image"
+            onClick={(e) => handleImageClick(e, event.eventPictures[0])}
+          />   
         </div>
-
-        <div className="bottom-meta">
+      )}
+      
+      <div className="event-main-content">
+        <div className="text-content">
+          <div className={`content-text ${!showFullContent ? 'collapsed' : ''}`}>
+            {event.eventDescription || 'No description available.'}
+          </div>
+          {!showFullContent && event.eventDescription && event.eventDescription.length > 120 && (
+            <div className="content-fade" />
+          )}
+        </div>
+        
+        <div className="event-meta">
+          <div className="event-date-time">
+            <div className="event-date">
+              <FontAwesomeIcon icon={faCalendarDay} className="event-icon" />
+              <span>{formatDate(event.eventDate)}</span>
+            </div>
+            <div className="event-time">
+              <FontAwesomeIcon icon={faClock} className="event-icon" />
+              <span>{event.eventTime || 'No time'}</span>
+            </div>
+          </div>
+          
+          {event.eventLocation && (
+            <div className="event-location">
+              <FontAwesomeIcon icon={faLocationDot} className="event-icon" />
+              <span>{event.eventLocation}</span>
+            </div>
+          )}
+        </div>
+        
+        {event.eventTags && event.eventTags.length > 0 && (
           <div className="event-tags">
-            {event.eventTags && event.eventTags.map((tag, index) => (
+            {event.eventTags.map((tag, index) => (
               <span key={index} className="type-badge">{tag}</span>
             ))}
           </div>
-          
-          {isUserAnOrgAdmin && (
-            <div className="action-buttons">
-              <button
-                className="action-button"
-                onClick={(e) => handleButtonClick(e, () => onEdit(event))}
-              >
-                <FontAwesomeIcon icon={faPen} />
-              </button>
-              <button
-                className="action-button delete"
-                onClick={(e) => handleButtonClick(e, () => onDelete(event.id))}
-                data-testid="delete-event-button"
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
-            </div>
-          )}
+        )}
+        
+        <div className="event-actions">
+          <button className="event-action-button" onClick={(e) => e.stopPropagation()}>
+            <div className="question-mark">?</div>
+            <span>Going</span>
+          </button>
         </div>
       </div>
+
+      <Modal 
+        show={showImageModal} 
+        onHide={() => setShowImageModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+        </Modal.Header>
+        <Modal.Body className="text-center p-0">
+          <img 
+            src={selectedImage} 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '80vh', 
+              objectFit: 'contain',
+              margin: '0 auto'
+            }}
+          />
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
