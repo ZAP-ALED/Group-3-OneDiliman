@@ -68,6 +68,7 @@ const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, 
             <button
               className="admin-action-button"
               onClick={(e) => handleButtonClick(e, () => onEdit(event))}
+              data-testid="edit-event-button"
             >
               <FontAwesomeIcon icon={faPen} />
             </button>
