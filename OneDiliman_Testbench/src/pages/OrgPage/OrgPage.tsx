@@ -1091,6 +1091,7 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingEvent.eventName}
+                    data-testid="edit-event-name-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventName: e.target.value
@@ -1103,6 +1104,7 @@ export default function OrgPage() {
                     className="form-control"
                     rows={5}
                     value={editingEvent.eventDescription}
+                    data-testid="edit-description-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventDescription: e.target.value
@@ -1115,6 +1117,7 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingEvent.eventLocation}
+                    data-testid="edit-location-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventLocation: e.target.value
@@ -1128,6 +1131,7 @@ export default function OrgPage() {
                       type="date"
                       className="form-control"
                       value={editingEvent.eventDate}
+                      data-testid="edit-date-field"
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
                         eventDate: e.target.value
@@ -1140,6 +1144,7 @@ export default function OrgPage() {
                       type="time"
                       className="form-control"
                       value={editingEvent.eventTime}
+                      data-testid="edit-time-field"
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
                         eventTime: e.target.value
@@ -1219,6 +1224,7 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingEvent && handleEditEvent(editingEvent)}
+              data-testid="save-changes-field"
             >
               Save Changes
             </button>
