@@ -5,7 +5,7 @@ import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimest
 import { app, db } from '../../FirebaseConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faChevronLeft, faCakeCandles, faLocationDot, faEnvelope, 
+  faUser, faChevronLeft, faCakeCandles, faLocationDot, faEnvelope, 
   faGlobe, faHandshakeAngle, faPen, faPlus, faImage
 } from '@fortawesome/free-solid-svg-icons';
 import { faFacebook } from '@fortawesome/free-brands-svg-icons';
@@ -143,6 +143,7 @@ export default function OrgPage() {
         const typedData: Organization = {
           orgName: data.orgName || '',
           orgCollege: data.orgCollege || '',
+          orgFollowers: data.orgFollowers || 0, // new added for followers
           orgAcronym: data.orgAcronym || '',
           orgDescription: data.orgDescription || '',
           orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
@@ -514,6 +515,21 @@ export default function OrgPage() {
                   <h1>{orgData?.orgName}</h1>
                   <h2>{orgData?.orgCollege}</h2>
                 </div>
+                {/* Followers */}
+                <div className="info-item">
+                      <FontAwesomeIcon icon={faUser} className="icon" />
+                      Followers 
+                      <span>{orgData?.orgFollowers}</span>
+                        <div className="org-title">
+                        <button 
+                          className="btn btn-primary me-2"
+                          onClick={handleUpdateOrgInfo}
+                        >
+                          Following
+                        </button>
+                      </div>
+                </div>
+                
                 
                 {isUserAnOrgAdmin && (
                   <div className="org-actions">
@@ -526,6 +542,7 @@ export default function OrgPage() {
                     </button>
                   </div>
                 )}
+                
               </div>
   
               {orgData?.orgTags && (
@@ -536,10 +553,12 @@ export default function OrgPage() {
                     </span>
                   ))}
                 </div>
+                
               )}
             </div>
           </div>
         </div>
+        
 
         {/* org details */}
         <div className="row mt-4">
@@ -842,7 +861,6 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingPost.postTitle}
-                    data-testid="edit-post-title"
                     onChange={(e) => setEditingPost({
                       ...editingPost,
                       postTitle: e.target.value
@@ -855,7 +873,6 @@ export default function OrgPage() {
                     className="form-control"
                     rows={5}
                     value={editingPost.postContent}
-                    data-testid="edit-post-content"
                     onChange={(e) => setEditingPost({
                       ...editingPost,
                       postContent: e.target.value
@@ -935,7 +952,6 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingPost && handleEditPost(editingPost)}
-              data-testid="save-changes-post"
             >
               Save Changes
             </button>
@@ -1094,7 +1110,6 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingEvent.eventName}
-                    data-testid="edit-event-name-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventName: e.target.value
@@ -1107,7 +1122,6 @@ export default function OrgPage() {
                     className="form-control"
                     rows={5}
                     value={editingEvent.eventDescription}
-                    data-testid="edit-description-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventDescription: e.target.value
@@ -1120,7 +1134,6 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingEvent.eventLocation}
-                    data-testid="edit-location-field"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventLocation: e.target.value
@@ -1134,7 +1147,6 @@ export default function OrgPage() {
                       type="date"
                       className="form-control"
                       value={editingEvent.eventDate}
-                      data-testid="edit-date-field"
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
                         eventDate: e.target.value
@@ -1147,7 +1159,6 @@ export default function OrgPage() {
                       type="time"
                       className="form-control"
                       value={editingEvent.eventTime}
-                      data-testid="edit-time-field"
                       onChange={(e) => setEditingEvent({
                         ...editingEvent,
                         eventTime: e.target.value
@@ -1227,7 +1238,6 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingEvent && handleEditEvent(editingEvent)}
-              data-testid="save-changes-field"
             >
               Save Changes
             </button>
