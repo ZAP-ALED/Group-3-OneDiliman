@@ -902,6 +902,7 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingPost.postTitle}
+                    data-testid="edit-post-title"
                     onChange={(e) => setEditingPost({
                       ...editingPost,
                       postTitle: e.target.value
@@ -914,6 +915,7 @@ export default function OrgPage() {
                     className="form-control"
                     rows={5}
                     value={editingPost.postContent}
+                    data-testid="edit-post-content"
                     onChange={(e) => setEditingPost({
                       ...editingPost,
                       postContent: e.target.value
@@ -993,6 +995,7 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingPost && handleEditPost(editingPost)}
+              data-testid="save-changes-post"
             >
               Save Changes
             </button>
