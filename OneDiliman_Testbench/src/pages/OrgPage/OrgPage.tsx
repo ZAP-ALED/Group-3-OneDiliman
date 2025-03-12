@@ -555,15 +555,15 @@ export default function OrgPage() {
                 <div className="info-item">
                       <FontAwesomeIcon icon={faUser} className="icon" />
                       Followers 
-                      <span>{orgData?.followerCount}</span>
+                      <span data-testid ="follower-count">{orgData?.followerCount}</span>
                         <div className="org-title">
                         {isStudentUser && (
                           isFollowing ? (
-                            <button className="btn btn-danger me-2" onClick={handleUnfollow}>
+                            <button className="btn btn-danger me-2" onClick={handleUnfollow} data-testid="unfollow-button">
                               Unfollow
                             </button>
                           ) : (
-                            <button className="btn btn-primary me-2" onClick={handleFollow}>
+                            <button className="btn btn-primary me-2" onClick={handleFollow} data-testid="follow-button">
                               Follow
                             </button>
                           )
