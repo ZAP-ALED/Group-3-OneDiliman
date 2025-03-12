@@ -1154,6 +1154,7 @@ export default function OrgPage() {
                     type="text"
                     className="form-control"
                     value={editingEvent.eventName}
+                    data-testid="edit-event-name"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventName: e.target.value
@@ -1166,6 +1167,7 @@ export default function OrgPage() {
                     className="form-control"
                     rows={5}
                     value={editingEvent.eventDescription}
+                    data-testid="edit-description"
                     onChange={(e) => setEditingEvent({
                       ...editingEvent,
                       eventDescription: e.target.value
@@ -1282,6 +1284,7 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingEvent && handleEditEvent(editingEvent)}
+              data-testid="save-changes-event"
             >
               Save Changes
             </button>

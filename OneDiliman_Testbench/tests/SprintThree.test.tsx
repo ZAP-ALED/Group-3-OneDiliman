@@ -206,9 +206,9 @@ test('as org, edit an event', async () => {
     const editButtons = screen.queryAllByTestId("edit-event-button");
     user.click(editButtons[0]);
 
-    const eventNameField = screen.getByTestId("edit-event-name-field")
-    const descriptionField = screen.getByTestId("edit-description-field");
-    const saveChangesField = screen.getByTestId("save-changes-field");
+    const eventNameField = screen.getByTestId("edit-event-name")
+    const descriptionField = screen.getByTestId("edit-description");
+    const saveChangesField = screen.getByTestId("save-changes-event");
 
     expect(eventNameField).toBeInTheDocument();
     expect(descriptionField).toBeInTheDocument();
@@ -305,4 +305,4 @@ test('as org, edit a post', async () => {
   });
 
 
-}, 25000)
+}, 5000)
