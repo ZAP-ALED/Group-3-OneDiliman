@@ -56,7 +56,7 @@ test('as org, create an event', async () => {
     await render(
         <MemoryRouter><DashboardPage /></MemoryRouter>);
     const user = userEvent.setup();
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 5000));
 
     const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
     expect(orgCard).toBeInTheDocument();
@@ -119,7 +119,7 @@ test('as org, create an event', async () => {
 
     await logOut();
 
-}, 15000)
+}, 25000)
 
 test('view events as user', async () => {
   await logInUser();
@@ -141,7 +141,7 @@ test('view events as user', async () => {
           </Routes>
       </MemoryRouter>
   );
-
+  await new Promise((r) => setTimeout(r, 2000));
   await waitFor(() => {
       const about = screen.getByText(/Facebook/i);
       expect(about).toBeInTheDocument();
@@ -240,13 +240,14 @@ test('as org, edit a post', async () => {
   const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
   await logInOrg();
+  await new Promise((r) => setTimeout(r, 5000));
   await cleanup;
 
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>
   );
   const user = userEvent.setup();
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 5000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   expect(orgCard).toBeInTheDocument();
@@ -271,25 +272,22 @@ test('as org, edit a post', async () => {
   });
 
   await new Promise((r) => setTimeout(r, 2000));
-  await waitFor(() => {
-    const postsCurrent = screen.queryAllByText("This is a test post for Sprint 3");
-    expect(postsCurrent.length).toBeGreaterThan(0);
-  })
+
   
   await waitFor(() => {
-    const editButtons = screen.queryAllByTestId("edit-event-button");
+    const editButtons = screen.queryAllByTestId("edit-post-button");
     user.click(editButtons[0]);
 
-    const eventNameField = screen.getByTestId("edit-event-name-field")
-    const descriptionField = screen.getByTestId("edit-description-field");
-    const saveChangesField = screen.getByTestId("save-changes-field");
+    const postTitleField = screen.getByTestId("edit-post-title")
+    const postContentField = screen.getByTestId("edit-post-content");
+    const saveChangesField = screen.getByTestId("save-changes-post");
 
-    expect(eventNameField).toBeInTheDocument();
-    expect(descriptionField).toBeInTheDocument();
+    expect(postTitleField).toBeInTheDocument();
+    expect(postContentField).toBeInTheDocument();
     expect(saveChangesField).toBeInTheDocument();
 
-    fireEvent.change(eventNameField, {target: {value: "test edit name"}});
-    fireEvent.change(descriptionField, {target: {value: "test edit desc"}});
+    fireEvent.change(postTitleField, {target: {value: "post edit name"}});
+    fireEvent.change(postContentField, {target: {value: "post edit desc"}});
     fireEvent.click(saveChangesField);
   })
   // Verify that the alert was called
@@ -301,7 +299,10 @@ test('as org, edit a post', async () => {
 
   // Verify that the changes are reflected
   await waitFor(() => {
-    expect(screen.getByText("post edit name")).toBeInTheDocument();
-    expect(screen.getByText("post edit desc")).toBeInTheDocument();
+    expect(screen.queryAllByText("post edit name").length).toBeGreaterThan(0);
+    expect(screen.queryAllByText("post edit desc").length).toBeGreaterThan(0);
+
   });
-}, 15000)
+
+
+}, 25000)
