@@ -1,10 +1,14 @@
 import React from 'react';
-import { render, screen, waitFor, user, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, user, cleanup, fireEvent} from '@testing-library/react';
 import LogInPage from '../src/pages/LogIn/LoginPage.tsx';
 import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
+import { Alert } from 'react-bootstrap';
+import { expect, test, vi } from 'vitest'
+
+
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
@@ -57,7 +61,7 @@ test('as org, create an event', async () => {
     const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
     expect(orgCard).toBeInTheDocument();
 
-    await fireEvent.click(orgCard);
+    await userEvent.click(orgCard);
     await render(
         <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
             <Routes>
@@ -73,7 +77,7 @@ test('as org, create an event', async () => {
 
     await waitFor(() => {
         const events = screen.getByTestId("events-tab");
-        fireEvent.click(events);
+        userEvent.click(events);
     })
 
     await new Promise((r) => setTimeout(r, 2000));
@@ -81,7 +85,7 @@ test('as org, create an event', async () => {
     const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
     console.log(eventsCurrent.length);
 
-    await fireEvent.click(screen.getByText(/Create New Event/));
+    await userEvent.click(screen.getByText(/Create New Event/));
     await user.type(screen.getByPlaceholderText(/Name/i), "Test Event (SprintThree.test.tsx)");
     await user.type(screen.getByPlaceholderText(/Describe your event.../i), "This is a test event. Courtesy of SprintThree.test.tsx");
     await user.type(screen.getByPlaceholderText(/Event location/i), "Test location");
@@ -109,7 +113,7 @@ test('as org, create an event', async () => {
     })
 
     await waitFor(() => {
-      const uploadedImage = screen.queryAllByAltText('Test Event (SprintThree.test.tsx) - Image 1');
+      const uploadedImage = screen.queryAllByAltText('Test Event (SprintThree.test.tsx)');
       expect(uploadedImage.length).toBeGreaterThan(0)
     });
 
@@ -129,7 +133,7 @@ test('view events as user', async () => {
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   expect(orgCard).toBeInTheDocument();
 
-  await fireEvent.click(orgCard);
+  await userEvent.click(orgCard);
   await render(
       <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
           <Routes>
@@ -145,7 +149,7 @@ test('view events as user', async () => {
 
   await waitFor(() => {
       const events = screen.getByTestId("events-tab");
-      fireEvent.click(events);
+      userEvent.click(events);
   })
 
   await new Promise((r) => setTimeout(r, 2000));
@@ -153,6 +157,80 @@ test('view events as user', async () => {
   const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
   expect(eventsCurrent.length).toBeGreaterThan(0);
 
+  await logOut();
+
 }, 10000)
 
-test('as org, edit an event')
+test('as org, edit an event', async () => {
+  const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  
+
+  await logInOrg();
+  await cleanup;
+
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>
+  );
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 2000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+
+  await user.click(orgCard);
+  await render(
+    <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+      <Routes> 
+        <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  await waitFor(() => {
+    const about = screen.getByText(/Facebook/i);
+    expect(about).toBeInTheDocument();
+  });
+
+  await waitFor(() => {
+      const events = screen.getByTestId("events-tab");
+      user.click(events);
+  });
+
+  await new Promise((r) => setTimeout(r, 2000));
+  await waitFor(() => {
+    const eventsCurrent = screen.queryAllByText("This is a test event. Courtesy of SprintThree.test.tsx");
+    expect(eventsCurrent.length).toBeGreaterThan(0);
+  });
+
+  await waitFor(() => {
+    const editButtons = screen.queryAllByTestId("edit-event-button");
+    user.click(editButtons[0]);
+
+    const eventNameField = screen.getByTestId("edit-event-name-field")
+    const descriptionField = screen.getByTestId("edit-description-field");
+    const saveChangesField = screen.getByTestId("save-changes-field");
+
+    expect(eventNameField).toBeInTheDocument();
+    expect(descriptionField).toBeInTheDocument();
+    expect(saveChangesField).toBeInTheDocument();
+
+    fireEvent.change(eventNameField, {target: {value: "test edit name"}});
+    fireEvent.change(descriptionField, {target: {value: "test edit desc"}});
+    fireEvent.click(saveChangesField);
+
+    
+  });
+  // Verify that the alert was called
+  await waitFor(() => {
+    expect(spyAlert).toHaveBeenCalledWith('Event updated successfully!');
+  });
+  // Restore the original alert function
+  spyAlert.mockRestore();
+
+  // Verify that the changes are reflected
+  await waitFor(() => {
+    expect(screen.getByText("test edit name")).toBeInTheDocument();
+    expect(screen.getByText("test edit desc")).toBeInTheDocument();
+  });
+}, 15000)
+
