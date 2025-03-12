@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
-import { followOrganization, unfollowOrganization, isFollowingOrganization } from '../../firebase/auth';
+import { followOrganization, unfollowOrganization, isFollowingOrganization, isStudent } from '../../firebase/auth';
 import { app, db } from '../../FirebaseConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -94,6 +94,7 @@ export default function OrgPage() {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
   const [isFollowing, setIsFollowing] = useState<boolean>(false); //new for following
+  const [isStudentUser, setIsStudentUser] = useState<boolean>(false);
 
   useEffect(() => {
     const auth = getAuth();
@@ -133,6 +134,12 @@ export default function OrgPage() {
         
         const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
         setIsUserAnOrgAdmin(isAdmin);
+
+        const followingStatus = await isFollowingOrganization(user.uid, params.orgId!);
+        setIsFollowing(followingStatus);
+
+        const studentStatus = await isStudent(user.uid);
+        setIsStudentUser(studentStatus);
 
         setOrgData(data as Organization);
         
@@ -550,14 +557,16 @@ export default function OrgPage() {
                       Followers 
                       <span>{orgData?.followerCount}</span>
                         <div className="org-title">
-                        {isFollowing ? (
-                          <button className="btn btn-danger me-2" onClick={handleUnfollow}>
-                            Unfollow
-                          </button>
-                        ) : (
-                          <button className="btn btn-primary me-2" onClick={handleFollow}>
-                            Follow
-                          </button>
+                        {isStudentUser && (
+                          isFollowing ? (
+                            <button className="btn btn-danger me-2" onClick={handleUnfollow}>
+                              Unfollow
+                            </button>
+                          ) : (
+                            <button className="btn btn-primary me-2" onClick={handleFollow}>
+                              Follow
+                            </button>
+                          )
                         )}
                       </div>
                 </div>

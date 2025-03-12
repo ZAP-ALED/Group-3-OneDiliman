@@ -273,3 +273,23 @@ export const followOrganization = async (userId: string, orgId: string) => {
       return false;
     }
   };
+
+  export const isStudent = async (userId: string): Promise<boolean> => {
+    const db = getFirestore(app);
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Check if the user has a studentId field and it has a value
+        return !!userData.studentId; // Returns true if studentId exists and is not empty
+      } else {
+        console.error('User document does not exist');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking if user is a student:', error);
+      return false;
+    }
+  };
