@@ -5,6 +5,7 @@ export class User {
      private studentNo: string;
      private orgsJoined: Organization[];
      private role: string;
+     private followedOrgs: Organization[]; // New property to store followed organizations     
 
      constructor(
           firstName: string,
@@ -12,6 +13,7 @@ export class User {
           lastName: string,
           studentNo: string,
           orgsJoined: Organization[] = [],
+          followedOrgs: Organization[] = [], // Initialize followedOrgs as an empty array
           role: string,
      ) {
                this.firstName = firstName;
@@ -20,6 +22,7 @@ export class User {
                this.studentNo = studentNo;
                this.orgsJoined = orgsJoined;
                this.role = role;
+               this.followedOrgs = followedOrgs;
      }
 
      public getFirstName() {
@@ -51,6 +54,10 @@ export class User {
      public getRole() {
           return this.role;
      }
+
+     public getFollowedOrgs() {
+          return this.followedOrgs;
+     }
      
      public addOrgsJoined(org: Organization) {
           this.orgsJoined.push(org);
@@ -81,6 +88,7 @@ export class Organization {
      private orgDescription: string;
      private orgScope: string;
      private openForApplications: string;
+     private followerCount: number; // New property to store follower count
      private followers: string[]; // New property to store followers
 
     constructor (
@@ -100,6 +108,7 @@ export class Organization {
           orgDescription: string = "N/A",
           orgScope: string = "N/A",
           openForApplications: string = "N/A",
+          followerCount: number = 0, // Initialize follower count as 0
           followers: string[] = [] // Initialize followers as an empty array
      )   
           {
@@ -119,10 +128,14 @@ export class Organization {
           this.orgDescription = orgDescription;
           this.orgScope = orgScope;
           this.openForApplications = openForApplications;
+          this.followerCount = followerCount;
           this.followers = followers;
 
      }
 
+     public getFollowerCount() {
+          return this.followerCount;
+     }
 
      public getFollowers() {
           return this.followers;
