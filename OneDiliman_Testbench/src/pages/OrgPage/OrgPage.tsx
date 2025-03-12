@@ -935,6 +935,7 @@ export default function OrgPage() {
             <button 
               className="btn btn-primary"
               onClick={() => editingPost && handleEditPost(editingPost)}
+              data-testid="save-changes-post"
             >
               Save Changes
             </button>

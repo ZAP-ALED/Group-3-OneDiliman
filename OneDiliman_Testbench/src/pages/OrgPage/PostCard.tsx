@@ -102,6 +102,7 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
               <button
                 className="action-button"
                 onClick={(e) => handleButtonClick(e, () => onEdit(post))}
+                data-testid="edit-post-button"
               >
                 <FontAwesomeIcon icon={faPen} />
               </button>
