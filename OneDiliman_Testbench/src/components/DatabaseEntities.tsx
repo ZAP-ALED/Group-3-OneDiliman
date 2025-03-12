@@ -65,57 +65,75 @@ export class User {
 }
 
 export class Organization {
-    private orgName: string;
-    private orgId: string;
-    private orgLogo: string;
-    private orgAcronym: string;
-    private orgPictures: string[];
-    private orgBio: string;
-    private orgTags: string[];
-    private dateFounded: string;
-    private orgLocation: string;
-    private orgAffiliations: string[];
-    private orgEmails: string[];
-    private orgWebsite: string;
-    private orgFacebook: string;
-    private orgDescription: string;
-    private orgScope: string;
-    private openForApplications: string;
+     private orgName: string;
+     private orgId: string;
+     private orgLogo: string;
+     private orgAcronym: string;
+     private orgPictures: string[];
+     private orgBio: string;
+     private orgTags: string[];
+     private dateFounded: string;
+     private orgLocation: string;
+     private orgAffiliations: string[];
+     private orgEmails: string[];
+     private orgWebsite: string;
+     private orgFacebook: string;
+     private orgDescription: string;
+     private orgScope: string;
+     private openForApplications: string;
+     private followers: string[]; // New property to store followers
 
     constructor (
-        orgName: string = "N/A",
-        orgId: string = "N/A",
-        orgLogo: string = "N/A",
-        orgAcronym: string = "N/A",
-        orgPictures: string[] = [],
-        orgBio: string = "N/A",
-        orgTags: string[] = [],
-        dateFounded: string = "N/A",
-        orgLocation: string = "N/A",
-        orgAffiliations: string[] = [],
-        orgEmails: string[] = [],
-        orgWebsite: string = "N/A",
-        orgFacebook: string = "N/A",
-        orgDescription: string = "N/A",
-        orgScope: string = "N/A",
-        openForApplications: string = "N/A"  
-     )   {
-            this.orgId = orgId;
-            this.orgLogo = orgLogo;
-            this.orgName = orgName;
-            this.orgAcronym = orgAcronym;
-            this.orgPictures = orgPictures;
-            this.orgBio = orgBio;
-            this.orgTags = orgTags;
-            this.dateFounded = dateFounded;
-            this.orgLocation = orgLocation;
-            this.orgAffiliations = orgAffiliations;
-            this.orgEmails = orgEmails;
-            this.orgWebsite = orgWebsite;
-            this.orgFacebook = orgFacebook;
-            this.orgDescription = orgDescription;
-            this.orgScope = orgScope;
-            this.openForApplications = openForApplications;
+          orgName: string = "N/A",
+          orgId: string = "N/A",
+          orgLogo: string = "N/A",
+          orgAcronym: string = "N/A",
+          orgPictures: string[] = [],
+          orgBio: string = "N/A",
+          orgTags: string[] = [],
+          dateFounded: string = "N/A",
+          orgLocation: string = "N/A",
+          orgAffiliations: string[] = [],
+          orgEmails: string[] = [],
+          orgWebsite: string = "N/A",
+          orgFacebook: string = "N/A",
+          orgDescription: string = "N/A",
+          orgScope: string = "N/A",
+          openForApplications: string = "N/A",
+          followers: string[] = [] // Initialize followers as an empty array
+     )   
+          {
+          this.orgId = orgId;
+          this.orgLogo = orgLogo;
+          this.orgName = orgName;
+          this.orgAcronym = orgAcronym;
+          this.orgPictures = orgPictures;
+          this.orgBio = orgBio;
+          this.orgTags = orgTags;
+          this.dateFounded = dateFounded;
+          this.orgLocation = orgLocation;
+          this.orgAffiliations = orgAffiliations;
+          this.orgEmails = orgEmails;
+          this.orgWebsite = orgWebsite;
+          this.orgFacebook = orgFacebook;
+          this.orgDescription = orgDescription;
+          this.orgScope = orgScope;
+          this.openForApplications = openForApplications;
+          this.followers = followers;
+
+     }
+
+
+     public getFollowers() {
+          return this.followers;
+     }
+
+     public addFollower(follower: string) {
+          this.followers.push(follower);
+     }
+
+     public removeFollower(follower: string) {
+          this.followers = this.followers.filter((item) => item !== follower);
      }
 
      public getOrgId() {
