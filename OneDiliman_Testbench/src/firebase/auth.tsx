@@ -146,6 +146,7 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     aspiringApplicants: {},
                     isVerified: false,
                     followerCount: 0,
+                    followers: [],
 
                 });
             
@@ -221,6 +222,7 @@ export const followOrganization = async (userId: string, orgId: string) => {
   
       // Increment the organization's follower count
       await updateDoc(orgRef, {
+        followers: arrayUnion(userId),
         followerCount: increment(1), // Increment by 1
       });
   
@@ -244,6 +246,7 @@ export const followOrganization = async (userId: string, orgId: string) => {
   
       // Decrement the organization's follower count
       await updateDoc(orgRef, {
+        followers: arrayRemove(userId),
         followerCount: increment(-1), // Decrement by 1
       });
   
