@@ -128,7 +128,7 @@ test('view events as user', async () => {
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
   const user = userEvent.setup();
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 3000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   expect(orgCard).toBeInTheDocument();
@@ -232,5 +232,76 @@ test('as org, edit an event', async () => {
     expect(screen.getByText("test edit name")).toBeInTheDocument();
     expect(screen.getByText("test edit desc")).toBeInTheDocument();
   });
+
+  await logOut();
 }, 15000)
 
+test('as org, edit a post', async () => {
+  const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+
+  await logInOrg();
+  await cleanup;
+
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>
+  );
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 2000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+
+  await user.click(orgCard);
+  await render(
+    <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+      <Routes> 
+        <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  await waitFor(() => {
+    const about = screen.getByText(/Facebook/i);
+    expect(about).toBeInTheDocument();
+  });
+
+  await waitFor(() => {
+      const posts = screen.getByTestId("posts-tab");
+      user.click(posts);
+  });
+
+  await new Promise((r) => setTimeout(r, 2000));
+  await waitFor(() => {
+    const postsCurrent = screen.queryAllByText("This is a test post for Sprint 3");
+    expect(postsCurrent.length).toBeGreaterThan(0);
+  })
+  
+  await waitFor(() => {
+    const editButtons = screen.queryAllByTestId("edit-event-button");
+    user.click(editButtons[0]);
+
+    const eventNameField = screen.getByTestId("edit-event-name-field")
+    const descriptionField = screen.getByTestId("edit-description-field");
+    const saveChangesField = screen.getByTestId("save-changes-field");
+
+    expect(eventNameField).toBeInTheDocument();
+    expect(descriptionField).toBeInTheDocument();
+    expect(saveChangesField).toBeInTheDocument();
+
+    fireEvent.change(eventNameField, {target: {value: "test edit name"}});
+    fireEvent.change(descriptionField, {target: {value: "test edit desc"}});
+    fireEvent.click(saveChangesField);
+  })
+  // Verify that the alert was called
+  await waitFor(() => {
+    expect(spyAlert).toHaveBeenCalledWith('Post updated successfully!');
+  });
+  // Restore the original alert function
+  spyAlert.mockRestore();
+
+  // Verify that the changes are reflected
+  await waitFor(() => {
+    expect(screen.getByText("post edit name")).toBeInTheDocument();
+    expect(screen.getByText("post edit desc")).toBeInTheDocument();
+  });
+}, 15000)
