@@ -2,7 +2,7 @@
 
 import { createUserWithEmailAndPassword, signInAnonymously, signInWithEmailAndPassword, sendEmailVerification, getAuth, updateProfile } from "firebase/auth";
 import { app, auth } from "../FirebaseConfig";
-import { addDoc, collection, doc, getFirestore, setDoc, updateDoc, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getFirestore, setDoc, updateDoc, getDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
 
 // adding custom data in profile: https://www.youtube.com/watch?v=qWy9ylc3f9U
 export const doCreateUserWithEmailAndPassword = async (formData: any) => {
@@ -21,7 +21,8 @@ export const doCreateUserWithEmailAndPassword = async (formData: any) => {
                 aspiringAppliedOrgs: {},
                 memberOrgs: {},
                 orgBookmarks: {},
-                isVerified: false
+                isVerified: false,
+                followedOrgs: []
             });
 
             await sendEmailVerification(cred.user);
@@ -143,7 +144,9 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     members: {},
                     applicants: {},
                     aspiringApplicants: {},
-                    isVerified: false
+                    isVerified: false,
+                    followerCount: 0,
+
                 });
             
                 console.log("Successfully wrote organization data to Firestore");
@@ -202,3 +205,71 @@ export const doDeletePost = async (postId: string) => {
         postPictures: ["https://imgur.com/E6u04LW"]
     });
 }
+
+export const followOrganization = async (userId: string, orgId: string) => {
+    const db = getFirestore(app);
+
+    try {
+      // Reference to the user and organization documents
+      const userRef = doc(db, 'users', userId);
+      const orgRef = doc(db, 'organizations', orgId);
+  
+      // Update the user's followedOrgs array
+      await updateDoc(userRef, {
+        followedOrgs: arrayUnion(orgId), // Add the orgId to the array
+      });
+  
+      // Increment the organization's follower count
+      await updateDoc(orgRef, {
+        followerCount: increment(1), // Increment by 1
+      });
+  
+      console.log('User successfully followed the organization!');
+    } catch (error) {
+      console.error('Error following organization:', error);
+    }
+  };
+
+  export const unfollowOrganization = async (userId: string, orgId: string) => {
+    const db = getFirestore(app);
+    try {
+      // Reference to the user and organization documents
+      const userRef = doc(db, 'users', userId);
+      const orgRef = doc(db, 'organizations', orgId);
+  
+      // Update the user's followedOrgs array
+      await updateDoc(userRef, {
+        followedOrgs: arrayRemove(orgId), // Remove the orgId from the array
+      });
+  
+      // Decrement the organization's follower count
+      await updateDoc(orgRef, {
+        followerCount: increment(-1), // Decrement by 1
+      });
+  
+      console.log('User successfully unfollowed the organization!');
+    } catch (error) {
+      console.error('Error unfollowing organization:', error);
+    }
+  };
+
+  export const isFollowingOrganization = async (userId: string, orgId: string): Promise<boolean> => {
+    const db = getFirestore(app);
+    try {
+      // Reference to the user document
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        // Check if the orgId is in the user's followedOrgs array
+        return userData.followedOrgs && userData.followedOrgs.includes(orgId);
+      } else {
+        console.error('User document does not exist');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking if user is following organization:', error);
+      return false;
+    }
+  };
