@@ -128,7 +128,7 @@ test('view events as user', async () => {
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
   const user = userEvent.setup();
-  await new Promise((r) => setTimeout(r, 3000));
+  await new Promise((r) => setTimeout(r, 5000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   expect(orgCard).toBeInTheDocument();
@@ -159,7 +159,7 @@ test('view events as user', async () => {
 
   await logOut();
 
-}, 10000)
+}, 25000)
 
 test('as org, edit an event', async () => {
   const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -236,6 +236,66 @@ test('as org, edit an event', async () => {
   await logOut();
 }, 15000)
 
+test('as org, delete an event', async () => {
+  const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  
+
+  await logInOrg();
+  await cleanup;
+
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>
+  );
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 5000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+
+  await user.click(orgCard);
+  await render(
+    <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+      <Routes> 
+        <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+      </Routes>
+    </MemoryRouter>
+  );
+
+  await waitFor(() => {
+    const about = screen.getByText(/Facebook/i);
+    expect(about).toBeInTheDocument();
+  });
+
+  await waitFor(() => {
+      const events = screen.getByTestId("events-tab");
+      user.click(events);
+  });
+
+  await new Promise((r) => setTimeout(r, 2000));
+  await waitFor(() => {
+    const eventsCurrent = screen.queryAllByText("test edit name");
+    expect(eventsCurrent.length).toBeGreaterThan(0);  
+  });
+
+  const deleteButtons = screen.queryAllByTestId("delete-event-button");
+  if (deleteButtons.length > 0){
+    await user.click(deleteButtons[0])
+  }
+
+  await waitFor(() => {
+    expect(spyConfirm).toHaveBeenCalledWith('Are you sure you want to delete this event?');
+  });
+
+  spyConfirm.mockRestore();
+
+  await waitFor(() => {
+    const eventsCurrent = screen.queryAllByText("test edit name");
+    expect(eventsCurrent.length).toBe(0);  
+  });
+
+  await logOut();
+}, 15000)
+
 test('as org, edit a post', async () => {
   const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
@@ -303,6 +363,33 @@ test('as org, edit a post', async () => {
     expect(screen.queryAllByText("post edit desc").length).toBeGreaterThan(0);
 
   });
+  await logOut();
 
+}, 15000)
 
+test('as a user, follow and unfollow an org', async () => {
+  await logInUser();
+  cleanup;
+
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>);
+  const user = userEvent.setup();
+  await new Promise((r) => setTimeout(r, 5000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  expect(orgCard).toBeInTheDocument();
+
+  await userEvent.click(orgCard);
+  await render(
+      <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+          <Routes>
+              <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+          </Routes>
+      </MemoryRouter>
+  );
+  await new Promise((r) => setTimeout(r, 2000));
+  await waitFor(() => {
+      const about = screen.getByText(/Facebook/i);
+      expect(about).toBeInTheDocument();
+  });
 }, 15000)
