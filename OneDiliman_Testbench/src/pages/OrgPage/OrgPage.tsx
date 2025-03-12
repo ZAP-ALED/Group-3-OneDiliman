@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { followOrganization, unfollowOrganization, isFollowingOrganization } from '../../firebase/auth';
 import { app, db } from '../../FirebaseConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
@@ -92,6 +93,7 @@ export default function OrgPage() {
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
 
+  const [isFollowing, setIsFollowing] = useState<boolean>(false); //new for following
 
   useEffect(() => {
     const auth = getAuth();
@@ -143,7 +145,7 @@ export default function OrgPage() {
         const typedData: Organization = {
           orgName: data.orgName || '',
           orgCollege: data.orgCollege || '',
-          orgFollowers: data.orgFollowers || 0, // new added for followers
+          followerCount: data.followerCount || 0, // new added for followers
           orgAcronym: data.orgAcronym || '',
           orgDescription: data.orgDescription || '',
           orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
@@ -254,6 +256,33 @@ export default function OrgPage() {
     };
   }, [params.orgId]);
 
+  const handleFollow = async () => {
+    try {
+      await followOrganization(uid, params.orgId!);
+      setIsFollowing(true); // Update the UI state
+      // Optionally, increment the follower count in the UI
+      setOrgData(prev => ({
+        ...prev!,
+        followerCount: (prev?.followerCount || 0) + 1,
+      }));
+    } catch (error) {
+      console.error('Error following organization:', error);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      await unfollowOrganization(uid, params.orgId!);
+      setIsFollowing(false); // Update the UI state
+      // Optionally, decrement the follower count in the UI
+      setOrgData(prev => ({
+        ...prev!,
+        followerCount: (prev?.followerCount || 0) - 1,
+      }));
+    } catch (error) {
+      console.error('Error unfollowing organization:', error);
+    }
+  };
   // Create a new post
   const handleCreatePost = async () => {
     if (!newPost.postTitle || !newPost.postContent) {
@@ -519,14 +548,17 @@ export default function OrgPage() {
                 <div className="info-item">
                       <FontAwesomeIcon icon={faUser} className="icon" />
                       Followers 
-                      <span>{orgData?.orgFollowers}</span>
+                      <span>{orgData?.followerCount}</span>
                         <div className="org-title">
-                        <button 
-                          className="btn btn-primary me-2"
-                          onClick={handleUpdateOrgInfo}
-                        >
-                          Following
-                        </button>
+                        {isFollowing ? (
+                          <button className="btn btn-danger me-2" onClick={handleUnfollow}>
+                            Unfollow
+                          </button>
+                        ) : (
+                          <button className="btn btn-primary me-2" onClick={handleFollow}>
+                            Follow
+                          </button>
+                        )}
                       </div>
                 </div>
                 
