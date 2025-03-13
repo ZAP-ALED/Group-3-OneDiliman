@@ -387,9 +387,26 @@ test('as a user, follow and unfollow an org', async () => {
           </Routes>
       </MemoryRouter>
   );
-  await new Promise((r) => setTimeout(r, 2000));
+  await new Promise((r) => setTimeout(r, 5000));
   await waitFor(() => {
       const about = screen.getByText(/Facebook/i);
       expect(about).toBeInTheDocument();
   });
-}, 15000)
+
+  const preFollowButton = await screen.getByTestId("follow-button");
+  expect(preFollowButton).toBeInTheDocument();
+  userEvent.click(preFollowButton);
+
+  await new Promise((r) => setTimeout(r, 2000));
+
+  const unfollowButton = screen.getByTestId("unfollow-button");
+  expect(unfollowButton).toBeInTheDocument();
+  userEvent.click(unfollowButton);
+
+  await new Promise((r) => setTimeout(r, 2000));
+
+  await waitFor(() => {
+    const postFollowButton = screen.getByTestId("follow-button");
+    expect(postFollowButton).toBeInTheDocument();
+  });
+}, 35000)
