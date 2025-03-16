@@ -237,11 +237,18 @@ export async function editOrgLogo(id: string, logo: string) {
   await updateDoc(orgDoc, { orgLogo: logo });
 }
 
-export async function updateAvailabilityOrg(id: string, open: boolean) {
-  const db = getFirestore();
-  const orgDoc = doc(db, "organizations", id);
-
-  await updateDoc(orgDoc, { openForApplications: open ? "Open" : "Closed" });
+export async function updateAvailabilityOrg(orgId: string, isAvailable: boolean): Promise<void> {
+  try {
+    const db = getFirestore();
+    const orgRef = doc(db, 'organizations', orgId);
+    await updateDoc(orgRef, {
+      openForApplications: isAvailable
+    });
+    console.log('Application availability updated successfully');
+  } catch (error) {
+    console.error('Error updating application availability:', error);
+    throw error;
+  }
 }
 
 export async function editOrgDetailsAdmin(
@@ -736,3 +743,17 @@ export async function addEventData(
 
   return docRef.id;
 };
+
+export async function updateApplicationFormUrl(orgId: string, formUrl: string): Promise<void> {
+  try {
+    const db = getFirestore();
+    const orgRef = doc(db, 'organizations', orgId);
+    await updateDoc(orgRef, {
+      applicationFormUrl: formUrl
+    });
+    console.log('Application form URL updated successfully');
+  } catch (error) {
+    console.error('Error updating application form URL:', error);
+    throw error;
+  }
+}

@@ -20,6 +20,9 @@ import { Organization, Post, Event } from '../../components/DatabaseEntities';
 import { addPostData, addEventData } from '../../components/FirebaseConnection';
 import './OrgPage.css';
 import EventCard from './EventCard';
+import ApplicationButton from './ApplicationButton';
+
+
 
 interface Post {
   id: string;
@@ -171,7 +174,8 @@ export default function OrgPage() {
           members: data.members || {},
           applicants: data.applicants || {},
           aspiringApplicants: data.aspiringApplicants || {},
-          orgConnectedEmail: data.orgConnectedEmail || '' 
+          orgConnectedEmail: data.orgConnectedEmail || '' ,
+          applicationFormUrl: data.applicationFormUrl || '',
         };
         
         // might use in the next sprints
@@ -594,8 +598,16 @@ export default function OrgPage() {
                     </span>
                   ))}
                 </div>
-                
               )}
+
+              <ApplicationButton
+                orgId={params.orgId!}
+                isOpen={Boolean(orgData?.openForApplications)}
+                formUrl={orgData?.applicationFormUrl || ""}
+                orgName={orgData?.orgName || ""}
+                isAdmin={isUserAnOrgAdmin}
+              />
+            
             </div>
           </div>
         </div>
