@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { followOrganization, unfollowOrganization, isFollowingOrganization, isStudent } from '../../firebase/auth';
 import { app, db } from '../../FirebaseConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,7 +17,7 @@ import Tabs from 'react-bootstrap/Tabs';
 import Navbar from '../../components/Navbar/Navbar';
 import PostCard from './PostCard';
 import { Organization, Post, Event } from '../../components/DatabaseEntities';
-import { addPostData, addEventData } from '../../components/FirebaseConnection';
+import { addPostData, addEventData, addNotification } from '../../components/FirebaseConnection';
 import './OrgPage.css';
 import EventCard from './EventCard';
 import ApplicationButton from './ApplicationButton';
@@ -482,6 +482,13 @@ export default function OrgPage() {
       newPost.postTags || []
     );
 
+    // Notify followers - Sprint 4
+    const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
+    const followers = orgDoc.data()?.followers || [];
+    await Promise.all(followers.map(async (followerId: string) => {
+      await addNotification(followerId, `New Post from ${orgData?.orgName}: ${newPost.postTitle}`, params.orgId!, postId);
+    }));
+
     setShowPostModal(false);
     setNewPost({
       postTitle: '',
@@ -592,6 +599,13 @@ export default function OrgPage() {
       newEvent.eventTime,
       newEvent.eventTags || []
     );
+
+    // Notify followers - Sprint 4
+    const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
+    const followers = orgDoc.data()?.followers || [];
+    await Promise.all(followers.map(async (followerId: string) => {
+      await addNotification(followerId, `New Event from ${orgData?.orgName}: ${newEvent.eventName}`, params.orgId!, eventId);
+    }));
 
     setShowEventModal(false);
     setNewEvent({
