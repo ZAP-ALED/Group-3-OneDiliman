@@ -304,6 +304,29 @@ export default function OrgPage() {
     });
   };
 
+  // Sort Events Based on the day and time it will happen
+  const sortEvents = (events: Event[]) => {
+    return events.sort((a, b) => {
+        // Converting the time into a number
+        const timeA = a.eventTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+        const timeB = b.eventTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+
+        const dateA = (new Date(`${a.eventDate}`).getTime());
+        const dateB = (new Date(`${b.eventDate}`).getTime());
+        
+        // Displaying all the data (For DEBUGGING)
+        //const msg = `Date A: ${dateA}, Date B: ${dateB}, Time A: ${timeA}, Time B: ${timeB}; FinalA:  ${dateA + timeA}; FinalB: ${dateB + timeB}`;
+        //alert(msg)
+
+        // Combining the date and time into a single number and making them smaller
+        const finalA = (dateA/100) + (timeA/100);
+        const finalB = (dateB/100) + (timeB/100);
+
+        //alert(sortOrder === 'asc' ? dateA - dateB : dateB - dateA)
+        return sortOrder === 'asc' ? finalA - finalB : finalB - finalA;
+    });
+  };
+
   // useEffect(() => {
   //   const auth = getAuth();
   //   let postColl: () => void;
@@ -1020,14 +1043,24 @@ export default function OrgPage() {
                           Create New Event
                         </button>
                       )}
-                      
+                      <div className="d-flex justify-content-end mb-3">
+                        <label className="me-2">Sort:</label>
+                        <select 
+                          className="form-select" 
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                        >
+                          
+                          <option value="asc">Ascending</option>
+                          <option value="desc">Descending</option>
+                        </select>
+                      </div>
                       {events.length === 0 ? (
                         <div className="empty-events">
                           <p className="text-muted">No upcoming events</p>
                         </div>
                       ) : (
                         <div className="events-list">
-                          {events.map(event => (
+                          {sortEvents(events).map(event => (
                             <EventCard
                               key={event.id}
                               event={event}
