@@ -11,9 +11,15 @@ import {
   FieldValue,
   getDoc,
   setDoc,
+  serverTimestamp,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
   
 } from "firebase/firestore";
 import firebase from "firebase/compat/app";
+import { db } from "../FirebaseConfig";
 
 /*
 Used for setting connection to Firebase
