@@ -96,11 +96,15 @@ export default function OrgPage() {
   const [isFollowing, setIsFollowing] = useState<boolean>(false); //new for following
   const [isStudentUser, setIsStudentUser] = useState<boolean>(false);
 
+  // Sprint 4 - Loading Indicator Variables
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+
+  // Sprint 4 - Loading Indicator
   useEffect(() => {
     const auth = getAuth();
     let postColl: () => void;
     let eventsColl: () => void;
-
   
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -110,98 +114,42 @@ export default function OrgPage() {
         return;
       }
   
-      // console.log('Current user:', {
-      //   uid: user.uid,
-      //   email: user.email,
-      //   emailVerified: user.emailVerified
-      // });
-  
       setUid(user.uid);
-
-      try {        
+  
+      try {
         const orgDoc = await getDoc(doc(getFirestore(app), 'organizations', params.orgId!));
         console.log(orgDoc);
         const data = orgDoc.data();
-
-        
-        console.log('Raw organization data:', data);
-        
+  
         if (!orgDoc.exists()) {
           setError('Organization not found');
           setLoading(false);
           return;
         }
-        
+  
         const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
         setIsUserAnOrgAdmin(isAdmin);
-
+  
         const followingStatus = await isFollowingOrganization(user.uid, params.orgId!);
         setIsFollowing(followingStatus);
-
+  
         const studentStatus = await isStudent(user.uid);
         setIsStudentUser(studentStatus);
-
+  
         setOrgData(data as Organization);
-        
-        // console.log('Admin check:', {
-        //   userEmail: user.uid,
-        //   orgConnectedEmail: data.orgEmail,
-        //   isAdmin
-        // });
-              
-        const typedData: Organization = {
-          orgName: data.orgName || '',
-          orgCollege: data.orgCollege || '',
-          followerCount: data.followerCount || 0, // new added for followers
-          orgAcronym: data.orgAcronym || '',
-          orgDescription: data.orgDescription || '',
-          orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
-          orgWebsite: data.orgWebsite || '',
-          orgFacebook: data.orgFacebook || '',
-          orgLocation: data.orgLocation || '',
-          orgBio: data.orgBio || '',
-          orgLogo: data.orgLogo || '',
-          orgBanner: data.orgBanner || '',
-          orgPictures: Array.isArray(data.orgPictures) ? data.orgPictures : [],
-          orgTags: Array.isArray(data.orgTags) ? data.orgTags : [],
-          orgScope: data.orgScope || '',
-          orgAffiliations: Array.isArray(data.orgAffiliations) ? data.orgAffiliations : [],
-          dateFounded: data.dateFounded || '',
-          openForApplications: Boolean(data.openForApplications),
-          members: data.members || {},
-          applicants: data.applicants || {},
-          aspiringApplicants: data.aspiringApplicants || {},
-          orgConnectedEmail: data.orgConnectedEmail || '' 
-        };
-        
-        // might use in the next sprints
-        setOrgData(typedData);
-        setEditableData({
-          // orgName: typedData.orgName,
-          // orgCollege: typedData.orgCollege,
-          // orgAcronym: typedData.orgAcronym,
-          orgDescription: typedData.orgDescription,
-          // orgEmails: typedData.orgEmails,
-          orgWebsite: typedData.orgWebsite,
-          orgFacebook: typedData.orgFacebook,
-          // orgLocation: typedData.orgLocation,
-          orgBio: typedData.orgBio,
-          // orgScope: typedData.orgScope,
-          // orgAffiliations: typedData.orgAffiliations,
-          // dateFounded: typedData.dateFounded,
-          // openForApplications: typedData.openForApplications
-        });
-
+  
+        setLoading(false);
+  
         postColl = onSnapshot(
           collection(db, 'posts'),
           (snapshot) => {
             const postsData = snapshot.docs
-              .filter(doc => doc.data().postOwner === params.orgId) 
+              .filter(doc => doc.data().postOwner === params.orgId)
               .map(doc => {
                 const data = doc.data();
                 return {
                   id: doc.id,
-                  postId: doc.id, 
+                  postId: doc.id,
                   postOwner: data.postOwner || '',
                   postTitle: data.postTitle || '',
                   postContent: data.postContent || '',
@@ -211,19 +159,20 @@ export default function OrgPage() {
                   postTime: data.postTime || ''
                 };
               });
-
-            setPosts(postsData.sort((a, b) => 
-              new Date(b.postDate + ' ' + b.postTime).getTime() - 
+  
+            setPosts(postsData.sort((a, b) =>
+              new Date(b.postDate + ' ' + b.postTime).getTime() -
               new Date(a.postDate + ' ' + a.postTime).getTime()
             ));
+            setLoadingPosts(false);
           }
         );
-
-       eventsColl = onSnapshot(
+  
+        eventsColl = onSnapshot(
           collection(db, 'events'),
           (snapshot) => {
             const eventsData = snapshot.docs
-              .filter(doc => doc.data().eventOwner === params.orgId) 
+              .filter(doc => doc.data().eventOwner === params.orgId)
               .map(doc => {
                 const data = doc.data();
                 return {
@@ -240,28 +189,195 @@ export default function OrgPage() {
                   willNotify: data.willNotify || []
                 };
               });
-
-            setEvents(eventsData.sort((a, b) => 
-              new Date(b.eventDate + ' ' + b.eventTime).getTime() - 
+  
+            setEvents(eventsData.sort((a, b) =>
+              new Date(b.eventDate + ' ' + b.eventTime).getTime() -
               new Date(a.eventDate + ' ' + a.eventTime).getTime()
             ));
+            setLoadingEvents(false);
           }
         );
-
-        setLoading(false);
+  
       } catch (err) {
         console.error('Error:', err);
         setError('Error loading data');
         setLoading(false);
       }
     });
-
+  
     return () => {
       unsubscribe();
       if (postColl) postColl();
       if (eventsColl) eventsColl();
     };
   }, [params.orgId]);
+
+  // useEffect(() => {
+  //   const auth = getAuth();
+  //   let postColl: () => void;
+  //   let eventsColl: () => void;
+
+  
+  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  //     if (!user) {
+  //       console.log('No user logged in');
+  //       setError('No user logged in');
+  //       setLoading(false);
+  //       return;
+  //     }
+  
+  //     // console.log('Current user:', {
+  //     //   uid: user.uid,
+  //     //   email: user.email,
+  //     //   emailVerified: user.emailVerified
+  //     // });
+  
+  //     setUid(user.uid);
+
+  //     try {        
+  //       const orgDoc = await getDoc(doc(getFirestore(app), 'organizations', params.orgId!));
+  //       console.log(orgDoc);
+  //       const data = orgDoc.data();
+
+        
+  //       console.log('Raw organization data:', data);
+        
+  //       if (!orgDoc.exists()) {
+  //         setError('Organization not found');
+  //         setLoading(false);
+  //         return;
+  //       }
+        
+  //       const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
+  //       setIsUserAnOrgAdmin(isAdmin);
+
+  //       const followingStatus = await isFollowingOrganization(user.uid, params.orgId!);
+  //       setIsFollowing(followingStatus);
+
+  //       const studentStatus = await isStudent(user.uid);
+  //       setIsStudentUser(studentStatus);
+
+  //       setOrgData(data as Organization);
+        
+  //       // console.log('Admin check:', {
+  //       //   userEmail: user.uid,
+  //       //   orgConnectedEmail: data.orgEmail,
+  //       //   isAdmin
+  //       // });
+              
+  //       const typedData: Organization = {
+  //         orgName: data.orgName || '',
+  //         orgCollege: data.orgCollege || '',
+  //         followerCount: data.followerCount || 0, // new added for followers
+  //         orgAcronym: data.orgAcronym || '',
+  //         orgDescription: data.orgDescription || '',
+  //         orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
+  //         orgWebsite: data.orgWebsite || '',
+  //         orgFacebook: data.orgFacebook || '',
+  //         orgLocation: data.orgLocation || '',
+  //         orgBio: data.orgBio || '',
+  //         orgLogo: data.orgLogo || '',
+  //         orgBanner: data.orgBanner || '',
+  //         orgPictures: Array.isArray(data.orgPictures) ? data.orgPictures : [],
+  //         orgTags: Array.isArray(data.orgTags) ? data.orgTags : [],
+  //         orgScope: data.orgScope || '',
+  //         orgAffiliations: Array.isArray(data.orgAffiliations) ? data.orgAffiliations : [],
+  //         dateFounded: data.dateFounded || '',
+  //         openForApplications: Boolean(data.openForApplications),
+  //         members: data.members || {},
+  //         applicants: data.applicants || {},
+  //         aspiringApplicants: data.aspiringApplicants || {},
+  //         orgConnectedEmail: data.orgConnectedEmail || '' 
+  //       };
+        
+  //       // might use in the next sprints
+  //       setOrgData(typedData);
+  //       setEditableData({
+  //         // orgName: typedData.orgName,
+  //         // orgCollege: typedData.orgCollege,
+  //         // orgAcronym: typedData.orgAcronym,
+  //         orgDescription: typedData.orgDescription,
+  //         // orgEmails: typedData.orgEmails,
+  //         orgWebsite: typedData.orgWebsite,
+  //         orgFacebook: typedData.orgFacebook,
+  //         // orgLocation: typedData.orgLocation,
+  //         orgBio: typedData.orgBio,
+  //         // orgScope: typedData.orgScope,
+  //         // orgAffiliations: typedData.orgAffiliations,
+  //         // dateFounded: typedData.dateFounded,
+  //         // openForApplications: typedData.openForApplications
+  //       });
+
+  //       postColl = onSnapshot(
+  //         collection(db, 'posts'),
+  //         (snapshot) => {
+  //           const postsData = snapshot.docs
+  //             .filter(doc => doc.data().postOwner === params.orgId) 
+  //             .map(doc => {
+  //               const data = doc.data();
+  //               return {
+  //                 id: doc.id,
+  //                 postId: doc.id, 
+  //                 postOwner: data.postOwner || '',
+  //                 postTitle: data.postTitle || '',
+  //                 postContent: data.postContent || '',
+  //                 postPictures: data.postPictures || [],
+  //                 postTags: data.postTags || [],
+  //                 postDate: data.postDate || '',
+  //                 postTime: data.postTime || ''
+  //               };
+  //             });
+
+  //           setPosts(postsData.sort((a, b) => 
+  //             new Date(b.postDate + ' ' + b.postTime).getTime() - 
+  //             new Date(a.postDate + ' ' + a.postTime).getTime()
+  //           ));
+  //         }
+  //       );
+
+  //      eventsColl = onSnapshot(
+  //         collection(db, 'events'),
+  //         (snapshot) => {
+  //           const eventsData = snapshot.docs
+  //             .filter(doc => doc.data().eventOwner === params.orgId) 
+  //             .map(doc => {
+  //               const data = doc.data();
+  //               return {
+  //                 id: doc.id,
+  //                 eventId: doc.id,
+  //                 eventOwner: data.eventOwner || '',
+  //                 eventName: data.eventName || '',
+  //                 eventDescription: data.eventDescription || '',
+  //                 eventLocation: data.eventLocation || '',
+  //                 eventPictures: data.eventPictures || [],
+  //                 eventTags: data.eventTags || [],
+  //                 eventDate: data.eventDate || '',
+  //                 eventTime: data.eventTime || '',
+  //                 willNotify: data.willNotify || []
+  //               };
+  //             });
+
+  //           setEvents(eventsData.sort((a, b) => 
+  //             new Date(b.eventDate + ' ' + b.eventTime).getTime() - 
+  //             new Date(a.eventDate + ' ' + a.eventTime).getTime()
+  //           ));
+  //         }
+  //       );
+
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error('Error:', err);
+  //       setError('Error loading data');
+  //       setLoading(false);
+  //     }
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     if (postColl) postColl();
+  //     if (eventsColl) eventsColl();
+  //   };
+  // }, [params.orgId]);
 
   const handleFollow = async () => {
     try {
@@ -722,8 +838,13 @@ export default function OrgPage() {
                           Create New Post
                         </button>
                       )}
-                      
-                      {posts.length === 0 ? (
+                      {loadingPosts ? (
+                        <div className="loading-container">
+                          <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </Spinner>
+                        </div>
+                      ) : posts.length === 0 ? (
                         <div className="text-center p-4">
                           <p className="text-muted">No posts yet</p>
                         </div>
