@@ -757,3 +757,38 @@ export async function updateApplicationFormUrl(orgId: string, formUrl: string): 
     throw error;
   }
 }
+
+export const addNotification = async (userId: string, message: string, orgId: string, postId: string) => {
+  const db = getFirestore();
+  await addDoc(collection(db, 'notifications'), {
+    userId,
+    message,
+    orgId,
+    postId,
+    timestamp: serverTimestamp(),
+    read: false,
+  });
+};
+
+export const listenToNotifications = (userId: string, callback: (notifications: any[]) => void) => {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(notificationsRef, where('userId', '==', userId), orderBy('timestamp', 'desc'));
+
+  return onSnapshot(q, (snapshot) => {
+    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(notifications);
+  });
+};
+
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  const db = getFirestore();
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await updateDoc(notificationRef, { read: true });
+};
+
+export const deleteNotification = async (notificationId: string) => {
+  const db = getFirestore();
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await deleteDoc(notificationRef);
+};
