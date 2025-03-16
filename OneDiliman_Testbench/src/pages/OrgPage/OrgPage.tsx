@@ -103,11 +103,20 @@ export default function OrgPage() {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
 
+  const [sortCriteria, setSortCriteria] = useState<'alphabet' | 'date'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   // Sprint 4 - Loading Indicator
   useEffect(() => {
     const auth = getAuth();
     let postColl: () => void;
     let eventsColl: () => void;
+
+    const deletePastEvents = async (events: Event[]) => {
+      const now = new Date();
+      const pastEvents = events.filter(event => new Date(event.eventDate + ' ' + event.eventTime) < now);
+      await Promise.all(pastEvents.map(event => deleteDoc(doc(db, 'events', event.id))));
+    };
   
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -214,17 +223,14 @@ export default function OrgPage() {
                 };
               });
   
-            setPosts(postsData.sort((a, b) =>
-              new Date(b.postDate + ' ' + b.postTime).getTime() -
-              new Date(a.postDate + ' ' + a.postTime).getTime()
-            ));
+            setPosts(postsData);
             setLoadingPosts(false);
           }
         );
   
         eventsColl = onSnapshot(
           collection(db, 'events'),
-          (snapshot) => {
+          async (snapshot) => {
             const eventsData = snapshot.docs
               .filter(doc => doc.data().eventOwner === params.orgId)
               .map(doc => {
@@ -243,8 +249,10 @@ export default function OrgPage() {
                   willNotify: data.willNotify || []
                 };
               });
+
+            await deletePastEvents(eventsData);
   
-            setEvents(eventsData.sort((a, b) =>
+            setEvents(eventsData.filter(event => new Date(event.eventDate + ' ' + event.eventTime) >= new Date()).sort((a, b) =>
               new Date(b.eventDate + ' ' + b.eventTime).getTime() -
               new Date(a.eventDate + ' ' + a.eventTime).getTime()
             ));
@@ -265,6 +273,36 @@ export default function OrgPage() {
       if (eventsColl) eventsColl();
     };
   }, [params.orgId]);
+
+  const sortPosts = (posts: Post[]) => {
+    return posts.sort((a, b) => {
+      if (sortCriteria === 'alphabet') {
+        const titleA = a.postTitle.toLowerCase();
+        const titleB = b.postTitle.toLowerCase();
+        if (titleA < titleB) return sortOrder === 'asc' ? -1 : 1;
+        if (titleA > titleB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      } else {
+        // Converting the time into a number
+        const timeA = a.postTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+        const timeB = b.postTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+
+        const dateA = (new Date(`${a.postDate}`).getTime());
+        const dateB = (new Date(`${b.postDate}`).getTime());
+        
+        // Displaying all the data (For DEBUGGING)
+        //const msg = `Date A: ${dateA}, Date B: ${dateB}, Time A: ${timeA}, Time B: ${timeB}; FinalA:  ${dateA + timeA}; FinalB: ${dateB + timeB}`;
+        //alert(msg)
+
+        // Combining the date and time into a single number and making them smaller
+        const finalA = (dateA/100) + (timeA/100);
+        const finalB = (dateB/100) + (timeB/100);
+
+        //alert(sortOrder === 'asc' ? dateA - dateB : dateB - dateA)
+        return sortOrder === 'asc' ? finalA - finalB : finalB - finalA;
+      }
+    });
+  };
 
   // useEffect(() => {
   //   const auth = getAuth();
@@ -587,6 +625,17 @@ export default function OrgPage() {
 
   const handleCreateEvent = async () => {
     const eventId = doc(collection(db, 'events')).id;
+
+    if (!newEvent.eventName || !newEvent.eventDescription || !newEvent.eventDate || !newEvent.eventTime) {
+      alert('Event name, description, date, and time are required');
+      return;
+    }
+    //Event Date is in the past
+    if (new Date(newEvent.eventDate + ' ' + newEvent.eventTime) < new Date()) {
+      alert('Event date and time must be in the future');
+      return;
+    }
+    
   
     await addEventData(
       params.orgId!,
@@ -914,6 +963,25 @@ export default function OrgPage() {
                           Create New Post
                         </button>
                       )}
+                      <div className="d-flex justify-content-end mb-3">
+                        <label className="me-2">Sort:</label>
+                        <select 
+                          className="form-select me-2" 
+                          value={sortCriteria} 
+                          onChange={(e) => setSortCriteria(e.target.value as 'alphabet' | 'date')}
+                        >
+                          <option value="date">Date Created</option>
+                          <option value="alphabet">Alphabetically</option>
+                        </select>
+                        <select 
+                          className="form-select" 
+                          value={sortOrder} 
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                        >
+                          <option value="asc">Ascending</option>
+                          <option value="desc">Descending</option>
+                        </select>
+                      </div>
                       {loadingPosts ? (
                         <div className="loading-container">
                           <Spinner animation="border" role="status">
@@ -926,7 +994,7 @@ export default function OrgPage() {
                         </div>
                       ) : (
                         <div className="posts-list">
-                          {posts.map(post => (
+                          {sortPosts(posts).map(post => (
                             <PostCard
                               key={post.id}
                               post={post}
