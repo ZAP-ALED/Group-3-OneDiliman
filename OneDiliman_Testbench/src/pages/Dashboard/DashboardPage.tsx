@@ -8,6 +8,7 @@ import { fetchOrgData, fetchUserBookmarks, fetchUserData } from "../../component
 import Sidebar from "../../components/Sidebar/Sidebar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { Spinner } from 'react-bootstrap';
 
 export default function DashboardPage() {
 
@@ -31,6 +32,11 @@ export default function DashboardPage() {
   const [verified, setVerified] = useState<boolean | null>(null);
   const db = getFirestore();
   const auth = getAuth();
+
+  // Sprint 4 - Loading Status
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
 
   //const [uid, setUid] = useState("-1");
 
@@ -144,7 +150,44 @@ const filteredOrgs = orgs.filter(org =>
     setSelectedTags(updatedTags);
     setTagActive(updatedTagActive);
   }; */
-  
+
+  // Sprint 4 - Loading Status
+  useEffect(() => {
+    if (!uid) return;
+
+    setLoading(true);
+    setError(false);
+    setOrgs([]); // Clear existing data before fetching new data
+
+    fetchUserBookmarks(uid)
+      .then(bookmarks => {
+        console.log(bookmarks);
+        setUserBookmarks(bookmarks);
+      });
+
+    fetchOrgData()
+      .then(data => {
+        const newData = data
+          .filter(item => item.isVerified) // Only keep verified orgs
+          .map(item => ({
+            ...item,
+            starred: userBookmarks[item.id] || false,
+            id: item.id
+          }));
+
+        setOrgs(newData);
+        console.log("Verified orgs:", newData);
+        setDatabaseConnected(true);
+        setLoading(false);
+      })
+      .catch(error => {
+        setDatabaseConnected(false);
+        setLoading(false);
+        setError(true);
+        console.error("Error fetching organizations:", error);
+      });
+  }, [uid]);
+
   useEffect(() => {
     const auth = getAuth();
     const db = getFirestore();
@@ -278,8 +321,7 @@ const handleTagSelect = (tag: string) => {
   return (
     <div className="background-container"> 
       <Navbar currentPage={"dashboard"}/>
-      
-      
+
       {verified === false && (
     <div style={{
         backgroundColor: "#ffcccb",
@@ -362,27 +404,40 @@ const handleTagSelect = (tag: string) => {
       </div>
 
       <div className="container-md results-container">
-        {!databaseConnected ? (
-          <div className="no-results">
-            <svg width="304" height="300" viewBox="0 0 304 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="152" cy="138.054" r="105.242" fill="#FFF8EA"/>
-            <circle cx="152" cy="138.054" r="82.2581" fill="#F9E6CB"/>
-            <path d="M148.918 241.807C139.256 251.683 125.779 257.812 110.871 257.812C93.0764 257.812 77.3215 249.08 67.6574 235.667C62.8869 248.595 50.4554 257.812 35.871 257.812C17.1646 257.812 2 242.648 2 223.941C2 205.235 17.1646 190.071 35.871 190.071C44.3352 190.071 52.0744 193.175 58.0116 198.308C61.1183 171.871 83.5994 151.361 110.871 151.361C129.246 151.361 145.446 160.672 155.01 174.833C162.974 168.471 173.071 164.667 184.056 164.667C204.326 164.667 221.572 177.617 227.971 195.694C232.85 192.886 238.508 191.28 244.54 191.28C262.251 191.28 276.729 205.12 277.749 222.575C279.657 221.893 281.713 221.522 283.855 221.522C293.876 221.522 302 229.646 302 239.667C302 249.689 293.876 257.812 283.855 257.812C276.943 257.812 270.933 253.948 267.87 248.261C261.866 254.168 253.629 257.812 244.54 257.812C233.329 257.812 223.413 252.267 217.387 243.768C208.929 252.433 197.121 257.812 184.056 257.812C170.033 257.812 157.457 251.614 148.918 241.807Z" fill="white"/>
-            <path d="M2 223.941C2 205.235 17.1646 190.071 35.871 190.071C44.3352 190.071 52.0744 193.175 58.0116 198.308C61.1183 171.871 83.5994 151.361 110.871 151.361C129.246 151.361 145.446 160.672 155.01 174.833C162.974 168.471 173.071 164.667 184.056 164.667C204.326 164.667 221.572 177.617 227.971 195.694C232.85 192.886 238.508 191.28 244.54 191.28C262.251 191.28 276.729 205.12 277.749 222.575C279.657 221.893 281.713 221.522 283.855 221.522C293.876 221.522 302 229.646 302 239.667" stroke="#9D7045" stroke-width="2.06618" stroke-linecap="round"/>
-            <path d="M205.421 238.867C205.893 239.34 206.659 239.34 207.131 238.867L213.339 232.66C213.36 232.638 213.394 232.582 213.431 232.509C213.614 232.157 213.693 231.755 213.693 231.359L213.693 86.0383L91.516 86.0382L91.5159 230.754L91.5159 231.359C91.5159 231.964 91.7957 232.583 91.8723 232.66L98.08 238.867C98.5524 239.34 99.3184 239.34 99.7908 238.867L105.644 233.014L111.498 238.867C111.97 239.34 112.736 239.34 113.208 238.867L119.062 233.014L124.915 238.867C125.388 239.34 126.154 239.34 126.626 238.867L132.479 233.014L138.333 238.867C138.805 239.34 139.571 239.34 140.043 238.867L145.897 233.014L151.75 238.867C152.223 239.34 152.989 239.34 153.461 238.867L159.314 233.014L165.168 238.867C165.64 239.34 166.406 239.34 166.879 238.867L172.732 233.014L178.585 238.867C179.058 239.34 179.824 239.34 180.296 238.867L186.15 233.014L192.003 238.867C192.475 239.34 193.241 239.34 193.714 238.867L199.567 233.014L205.421 238.867Z" fill="#F7EDE3" stroke="#42230C" stroke-width="1.54963"/>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M136.274 156.2C138.947 156.2 141.113 154.033 141.113 151.361C141.113 148.689 138.947 146.522 136.274 146.522C133.602 146.522 131.436 148.689 131.436 151.361C131.436 154.033 133.602 156.2 136.274 156.2ZM168.936 156.2C171.608 156.2 173.774 154.033 173.774 151.361C173.774 148.689 171.608 146.522 168.936 146.522C166.263 146.522 164.097 148.689 164.097 151.361C164.097 154.033 166.263 156.2 168.936 156.2Z" fill="#42230C"/>
-            <path d="M172.564 182.442C168.204 176.091 160.891 171.925 152.605 171.925C144.319 171.925 137.005 176.091 132.645 182.442" stroke="#42230C" stroke-width="2.58272" stroke-linecap="round"/>
-            <circle cx="113.29" cy="67.8932" r="3.62903" stroke="#42230C" stroke-width="1.54963"/>
-            <circle cx="248.774" cy="181.603" r="2.41935" stroke="#42230C" stroke-width="1.54963"/>
-            <path d="M113.291 107.812H167.726M113.291 120.514H145.952" stroke="#DCBDAB" stroke-width="1.54963" stroke-linecap="round"/>
-            <path d="M103.613 217.893H201.597M103.613 205.796H162.403" stroke="#DCBDAB" stroke-width="1.54963" stroke-linecap="round"/>
-            <circle cx="59.4597" cy="162.853" r="5.44355" stroke="#42230C" stroke-width="1.54963"/>
-            <path d="M223.413 87.248H235.468M214.903 76.8119V66.6835" stroke="#91876E" stroke-width="1.54963" stroke-linecap="round"/>
-            <path d="M222.704 78.9568L230.722 70.9382" stroke="#91876E" stroke-width="1.54963" stroke-linecap="round"/>
-            <ellipse cx="152.605" cy="263.256" rx="61.0887" ry="5.44355" fill="#DCBDAB"/>
-            </svg>
-            <p style={{ fontSize: "26px", fontWeight: "500" }}>No Database Connection.</p>
+
+      {loading ? (
+        // Loading spinner and text  "Loading" while fetching data, color: White
+        <div className="loading-message">
+          <div className="loading-container" style={{color: "white"}}>
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+            <div style={{color: "white"}} margin-top="100px">
+            <p><br/>&nbsp; Fetching Organizations and Data...</p>
           </div>
+          </div>
+        </div>
+      ) : !databaseConnected ? (
+        <div className="no-results">
+          <svg width="304" height="300" viewBox="0 0 304 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="152" cy="138.054" r="105.242" fill="#FFF8EA"/>
+          <circle cx="152" cy="138.054" r="82.2581" fill="#F9E6CB"/>
+          <path d="M148.918 241.807C139.256 251.683 125.779 257.812 110.871 257.812C93.0764 257.812 77.3215 249.08 67.6574 235.667C62.8869 248.595 50.4554 257.812 35.871 257.812C17.1646 257.812 2 242.648 2 223.941C2 205.235 17.1646 190.071 35.871 190.071C44.3352 190.071 52.0744 193.175 58.0116 198.308C61.1183 171.871 83.5994 151.361 110.871 151.361C129.246 151.361 145.446 160.672 155.01 174.833C162.974 168.471 173.071 164.667 184.056 164.667C204.326 164.667 221.572 177.617 227.971 195.694C232.85 192.886 238.508 191.28 244.54 191.28C262.251 191.28 276.729 205.12 277.749 222.575C279.657 221.893 281.713 221.522 283.855 221.522C293.876 221.522 302 229.646 302 239.667C302 249.689 293.876 257.812 283.855 257.812C276.943 257.812 270.933 253.948 267.87 248.261C261.866 254.168 253.629 257.812 244.54 257.812C233.329 257.812 223.413 252.267 217.387 243.768C208.929 252.433 197.121 257.812 184.056 257.812C170.033 257.812 157.457 251.614 148.918 241.807Z" fill="white"/>
+          <path d="M2 223.941C2 205.235 17.1646 190.071 35.871 190.071C44.3352 190.071 52.0744 193.175 58.0116 198.308C61.1183 171.871 83.5994 151.361 110.871 151.361C129.246 151.361 145.446 160.672 155.01 174.833C162.974 168.471 173.071 164.667 184.056 164.667C204.326 164.667 221.572 177.617 227.971 195.694C232.85 192.886 238.508 191.28 244.54 191.28C262.251 191.28 276.729 205.12 277.749 222.575C279.657 221.893 281.713 221.522 283.855 221.522C293.876 221.522 302 229.646 302 239.667" stroke="#9D7045" stroke-width="2.06618" stroke-linecap="round"/>
+          <path d="M205.421 238.867C205.893 239.34 206.659 239.34 207.131 238.867L213.339 232.66C213.36 232.638 213.394 232.582 213.431 232.509C213.614 232.157 213.693 231.755 213.693 231.359L213.693 86.0383L91.516 86.0382L91.5159 230.754L91.5159 231.359C91.5159 231.964 91.7957 232.583 91.8723 232.66L98.08 238.867C98.5524 239.34 99.3184 239.34 99.7908 238.867L105.644 233.014L111.498 238.867C111.97 239.34 112.736 239.34 113.208 238.867L119.062 233.014L124.915 238.867C125.388 239.34 126.154 239.34 126.626 238.867L132.479 233.014L138.333 238.867C138.805 239.34 139.571 239.34 140.043 238.867L145.897 233.014L151.75 238.867C152.223 239.34 152.989 239.34 153.461 238.867L159.314 233.014L165.168 238.867C165.64 239.34 166.406 239.34 166.879 238.867L172.732 233.014L178.585 238.867C179.058 239.34 179.824 239.34 180.296 238.867L186.15 233.014L192.003 238.867C192.475 239.34 193.241 239.34 193.714 238.867L199.567 233.014L205.421 238.867Z" fill="#F7EDE3" stroke="#42230C" stroke-width="1.54963"/>
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M136.274 156.2C138.947 156.2 141.113 154.033 141.113 151.361C141.113 148.689 138.947 146.522 136.274 146.522C133.602 146.522 131.436 148.689 131.436 151.361C131.436 154.033 133.602 156.2 136.274 156.2ZM168.936 156.2C171.608 156.2 173.774 154.033 173.774 151.361C173.774 148.689 171.608 146.522 168.936 146.522C166.263 146.522 164.097 148.689 164.097 151.361C164.097 154.033 166.263 156.2 168.936 156.2Z" fill="#42230C"/>
+          <path d="M172.564 182.442C168.204 176.091 160.891 171.925 152.605 171.925C144.319 171.925 137.005 176.091 132.645 182.442" stroke="#42230C" stroke-width="2.58272" stroke-linecap="round"/>
+          <circle cx="113.29" cy="67.8932" r="3.62903" stroke="#42230C" stroke-width="1.54963"/>
+          <circle cx="248.774" cy="181.603" r="2.41935" stroke="#42230C" stroke-width="1.54963"/>
+          <path d="M113.291 107.812H167.726M113.291 120.514H145.952" stroke="#DCBDAB" stroke-width="1.54963" stroke-linecap="round"/>
+          <path d="M103.613 217.893H201.597M103.613 205.796H162.403" stroke="#DCBDAB" stroke-width="1.54963" stroke-linecap="round"/>
+          <circle cx="59.4597" cy="162.853" r="5.44355" stroke="#42230C" stroke-width="1.54963"/>
+          <path d="M223.413 87.248H235.468M214.903 76.8119V66.6835" stroke="#91876E" stroke-width="1.54963" stroke-linecap="round"/>
+          <path d="M222.704 78.9568L230.722 70.9382" stroke="#91876E" stroke-width="1.54963" stroke-linecap="round"/>
+          <ellipse cx="152.605" cy="263.256" rx="61.0887" ry="5.44355" fill="#DCBDAB"/>
+          </svg>
+          <p style={{ fontSize: "26px", fontWeight: "500" }}>No Database Connection.</p>
+        </div>
         ) : sortedOrgs.length === 0 ? (
           <div className="no-results">
             <svg width="304" height="300" viewBox="0 0 304 300" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -441,7 +496,7 @@ const handleTagSelect = (tag: string) => {
             </div>
           </div>
           </>
-        )}
+      )}
       </div>
     </div>
   );
