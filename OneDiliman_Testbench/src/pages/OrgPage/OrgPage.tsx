@@ -466,11 +466,11 @@ export default function OrgPage() {
       alert('Title and content are required');
       return;
     }
-
+  
     const postId = doc(collection(db, 'posts')).id;
     const postDate = new Date().toISOString().split('T')[0];
     const postTime = new Date().toLocaleTimeString();
-
+  
     await addPostData(
       params.orgId!,
       postId,
@@ -481,14 +481,14 @@ export default function OrgPage() {
       postTime,
       newPost.postTags || []
     );
-
+  
     // Notify followers - Sprint 4
     const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
     const followers = orgDoc.data()?.followers || [];
     await Promise.all(followers.map(async (followerId: string) => {
       await addNotification(followerId, `New Post from ${orgData?.orgName}: ${newPost.postTitle}`, params.orgId!, postId);
     }));
-
+  
     setShowPostModal(false);
     setNewPost({
       postTitle: '',
@@ -587,7 +587,7 @@ export default function OrgPage() {
 
   const handleCreateEvent = async () => {
     const eventId = doc(collection(db, 'events')).id;
-
+  
     await addEventData(
       params.orgId!,
       eventId,
@@ -599,14 +599,14 @@ export default function OrgPage() {
       newEvent.eventTime,
       newEvent.eventTags || []
     );
-
+  
     // Notify followers - Sprint 4
     const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
     const followers = orgDoc.data()?.followers || [];
     await Promise.all(followers.map(async (followerId: string) => {
       await addNotification(followerId, `New Event from ${orgData?.orgName}: ${newEvent.eventName}`, params.orgId!, eventId);
     }));
-
+  
     setShowEventModal(false);
     setNewEvent({
       eventName: '',
