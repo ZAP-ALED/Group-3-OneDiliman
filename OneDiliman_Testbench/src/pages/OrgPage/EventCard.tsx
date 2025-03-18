@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPen, 
@@ -9,6 +9,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import './EventCard.css'; 
 import Modal from 'react-bootstrap/Modal';
+import { getAuth } from 'firebase/auth';
+import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { db } from '../../FirebaseConfig';
+import { getMessaging, onMessage } from 'firebase/messaging';
 
 interface Event {
   id: string;
@@ -35,11 +39,13 @@ const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, 
   const [showFullContent, setShowFullContent] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
+  const [isGoing, setIsGoing] = useState(false); // State to track if the user is going to the event
   
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      year: 'numeric',
     });
   };
 
@@ -58,6 +64,56 @@ const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, 
     setSelectedImage(imageUrl);
     setShowImageModal(true);
   };
+
+  //Toggable Going button
+  const handleToggleGoing = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (user) {
+      const eventDocRef = doc(db, 'events', event.id);
+      if (isGoing) {
+        await updateDoc(eventDocRef, {
+          willNotify: arrayRemove(user.uid)
+        });
+      } else {
+        await updateDoc(eventDocRef, {
+          willNotify: arrayUnion(user.uid)
+        });
+      }
+      setIsGoing(!isGoing);
+    }
+  };
+
+  useEffect(() => {
+    const notifyUsers = async () => {
+      const eventDate = new Date(event.eventDate + ' ' + event.eventTime);
+      const now = new Date();
+      const timeDiff = eventDate.getTime() - now.getTime();
+
+      const notifyTimes = [
+        5 * 24 * 60 * 60 * 1000, // 5 days
+        3 * 24 * 60 * 60 * 1000, // 3 days
+        24 * 60 * 60 * 1000,     // 1 day
+        3 * 60 * 60 * 1000,       // 3 hours
+        1 * 60 * 60 * 1000,       // 1 hour
+      ];
+
+      if (notifyTimes.includes(timeDiff)) {
+        const messaging = getMessaging();
+        event.willNotify.forEach(userId => {
+          // Send notification to user
+          onMessage(messaging, (payload) => {
+            console.log('Message received. ', payload);
+            // Customize notification here
+          });
+        });
+      }
+    };
+
+    notifyUsers();
+  }, [event]);
 
   return (
     <div className="event-card" onClick={handleCardClick}>
@@ -133,9 +189,12 @@ const EventCard: React.FC<EventCardDeets> = ({ event, isUserAnOrgAdmin, onEdit, 
         )}
         
         <div className="event-actions">
-          <button className="event-action-button" onClick={(e) => e.stopPropagation()}>
+          <button 
+            className={`event-action-button ${isGoing ? 'going' : ''}`} 
+            onClick={handleToggleGoing}
+          >
             <div className="question-mark">?</div>
-            <span>Going</span>
+            <span>{isGoing ? 'Going' : 'Not Going'}</span>
           </button>
         </div>
       </div>
