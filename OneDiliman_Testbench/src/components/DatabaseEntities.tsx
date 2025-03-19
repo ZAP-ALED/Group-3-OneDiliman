@@ -90,6 +90,7 @@ export class Organization {
      private openForApplications: string;
      private followerCount: number; // New property to store follower count
      private followers: string[]; // New property to store followers
+     private applicationFormUrl: string;
 
     constructor (
           orgName: string = "N/A",
@@ -110,6 +111,7 @@ export class Organization {
           openForApplications: string = "N/A",
           followerCount: number = 0, // Initialize follower count as 0
           followers: string[] = [] // Initialize followers as an empty array
+          applicationFormUrl: string = "N/A",
      )   
           {
           this.orgId = orgId;
@@ -130,7 +132,12 @@ export class Organization {
           this.openForApplications = openForApplications;
           this.followerCount = followerCount;
           this.followers = followers;
+          this.applicationFormUrl = applicationFormUrl;
 
+     }
+
+     public getapplicationFormUrl() {
+          return this.applicationFormUrl;
      }
 
      public getFollowerCount() {

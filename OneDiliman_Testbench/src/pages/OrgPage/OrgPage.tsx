@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, collection, onSnapshot, addDoc, serverTimestamp, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { followOrganization, unfollowOrganization, isFollowingOrganization, isStudent } from '../../firebase/auth';
 import { app, db } from '../../FirebaseConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -17,9 +17,12 @@ import Tabs from 'react-bootstrap/Tabs';
 import Navbar from '../../components/Navbar/Navbar';
 import PostCard from './PostCard';
 import { Organization, Post, Event } from '../../components/DatabaseEntities';
-import { addPostData, addEventData } from '../../components/FirebaseConnection';
+import { addPostData, addEventData, addNotification } from '../../components/FirebaseConnection';
 import './OrgPage.css';
 import EventCard from './EventCard';
+import ApplicationButton from './ApplicationButton';
+
+
 
 interface Post {
   id: string;
@@ -96,11 +99,24 @@ export default function OrgPage() {
   const [isFollowing, setIsFollowing] = useState<boolean>(false); //new for following
   const [isStudentUser, setIsStudentUser] = useState<boolean>(false);
 
+  // Sprint 4 - Loading Indicator Variables
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+
+  const [sortCriteria, setSortCriteria] = useState<'alphabet' | 'date'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Sprint 4 - Loading Indicator
   useEffect(() => {
     const auth = getAuth();
     let postColl: () => void;
     let eventsColl: () => void;
 
+    const deletePastEvents = async (events: Event[]) => {
+      const now = new Date();
+      const pastEvents = events.filter(event => new Date(event.eventDate + ' ' + event.eventTime) < now);
+      await Promise.all(pastEvents.map(event => deleteDoc(doc(db, 'events', event.id))));
+    };
   
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
@@ -110,37 +126,28 @@ export default function OrgPage() {
         return;
       }
   
-      // console.log('Current user:', {
-      //   uid: user.uid,
-      //   email: user.email,
-      //   emailVerified: user.emailVerified
-      // });
-  
       setUid(user.uid);
-
-      try {        
+  
+      try {
         const orgDoc = await getDoc(doc(getFirestore(app), 'organizations', params.orgId!));
         console.log(orgDoc);
         const data = orgDoc.data();
-
-        
-        console.log('Raw organization data:', data);
-        
+  
         if (!orgDoc.exists()) {
           setError('Organization not found');
           setLoading(false);
           return;
         }
-        
+  
         const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
         setIsUserAnOrgAdmin(isAdmin);
-
+  
         const followingStatus = await isFollowingOrganization(user.uid, params.orgId!);
         setIsFollowing(followingStatus);
-
+  
         const studentStatus = await isStudent(user.uid);
         setIsStudentUser(studentStatus);
-
+  
         setOrgData(data as Organization);
         
         // console.log('Admin check:', {
@@ -171,7 +178,8 @@ export default function OrgPage() {
           members: data.members || {},
           applicants: data.applicants || {},
           aspiringApplicants: data.aspiringApplicants || {},
-          orgConnectedEmail: data.orgConnectedEmail || '' 
+          orgConnectedEmail: data.orgConnectedEmail || '' ,
+          applicationFormUrl: data.applicationFormUrl || '',
         };
         
         // might use in the next sprints
@@ -189,19 +197,22 @@ export default function OrgPage() {
           // orgScope: typedData.orgScope,
           // orgAffiliations: typedData.orgAffiliations,
           // dateFounded: typedData.dateFounded,
-          // openForApplications: typedData.openForApplications
+          openForApplications: typedData.openForApplications
         });
 
+  
+        setLoading(false);
+  
         postColl = onSnapshot(
           collection(db, 'posts'),
           (snapshot) => {
             const postsData = snapshot.docs
-              .filter(doc => doc.data().postOwner === params.orgId) 
+              .filter(doc => doc.data().postOwner === params.orgId)
               .map(doc => {
                 const data = doc.data();
                 return {
                   id: doc.id,
-                  postId: doc.id, 
+                  postId: doc.id,
                   postOwner: data.postOwner || '',
                   postTitle: data.postTitle || '',
                   postContent: data.postContent || '',
@@ -211,19 +222,17 @@ export default function OrgPage() {
                   postTime: data.postTime || ''
                 };
               });
-
-            setPosts(postsData.sort((a, b) => 
-              new Date(b.postDate + ' ' + b.postTime).getTime() - 
-              new Date(a.postDate + ' ' + a.postTime).getTime()
-            ));
+  
+            setPosts(postsData);
+            setLoadingPosts(false);
           }
         );
-
-       eventsColl = onSnapshot(
+  
+        eventsColl = onSnapshot(
           collection(db, 'events'),
-          (snapshot) => {
+          async (snapshot) => {
             const eventsData = snapshot.docs
-              .filter(doc => doc.data().eventOwner === params.orgId) 
+              .filter(doc => doc.data().eventOwner === params.orgId)
               .map(doc => {
                 const data = doc.data();
                 return {
@@ -241,27 +250,249 @@ export default function OrgPage() {
                 };
               });
 
-            setEvents(eventsData.sort((a, b) => 
-              new Date(b.eventDate + ' ' + b.eventTime).getTime() - 
+            await deletePastEvents(eventsData);
+  
+            setEvents(eventsData.filter(event => new Date(event.eventDate + ' ' + event.eventTime) >= new Date()).sort((a, b) =>
+              new Date(b.eventDate + ' ' + b.eventTime).getTime() -
               new Date(a.eventDate + ' ' + a.eventTime).getTime()
             ));
+            setLoadingEvents(false);
           }
         );
-
-        setLoading(false);
+  
       } catch (err) {
         console.error('Error:', err);
         setError('Error loading data');
         setLoading(false);
       }
     });
-
+  
     return () => {
       unsubscribe();
       if (postColl) postColl();
       if (eventsColl) eventsColl();
     };
   }, [params.orgId]);
+
+  const sortPosts = (posts: Post[]) => {
+    return posts.sort((a, b) => {
+      if (sortCriteria === 'alphabet') {
+        const titleA = a.postTitle.toLowerCase();
+        const titleB = b.postTitle.toLowerCase();
+        if (titleA < titleB) return sortOrder === 'asc' ? -1 : 1;
+        if (titleA > titleB) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      } else {
+        // Converting the time into a number
+        const timeA = a.postTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+        const timeB = b.postTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+
+        const dateA = (new Date(`${a.postDate}`).getTime());
+        const dateB = (new Date(`${b.postDate}`).getTime());
+        
+        // Displaying all the data (For DEBUGGING)
+        //const msg = `Date A: ${dateA}, Date B: ${dateB}, Time A: ${timeA}, Time B: ${timeB}; FinalA:  ${dateA + timeA}; FinalB: ${dateB + timeB}`;
+        //alert(msg)
+
+        // Combining the date and time into a single number and making them smaller
+        const finalA = (dateA/100) + (timeA/100);
+        const finalB = (dateB/100) + (timeB/100);
+
+        //alert(sortOrder === 'asc' ? dateA - dateB : dateB - dateA)
+        return sortOrder === 'asc' ? finalA - finalB : finalB - finalA;
+      }
+    });
+  };
+
+  // Sort Events Based on the day and time it will happen
+  const sortEvents = (events: Event[]) => {
+    return events.sort((a, b) => {
+        // Converting the time into a number
+        const timeA = a.eventTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+        const timeB = b.eventTime.split(':').reduce((acc, time, index) => acc + parseInt(time) * Math.pow(60, 2 - index), 0);
+
+        const dateA = (new Date(`${a.eventDate}`).getTime());
+        const dateB = (new Date(`${b.eventDate}`).getTime());
+        
+        // Displaying all the data (For DEBUGGING)
+        //const msg = `Date A: ${dateA}, Date B: ${dateB}, Time A: ${timeA}, Time B: ${timeB}; FinalA:  ${dateA + timeA}; FinalB: ${dateB + timeB}`;
+        //alert(msg)
+
+        // Combining the date and time into a single number and making them smaller
+        const finalA = (dateA/100) + (timeA/100);
+        const finalB = (dateB/100) + (timeB/100);
+
+        //alert(sortOrder === 'asc' ? dateA - dateB : dateB - dateA)
+        return sortOrder === 'asc' ? finalA - finalB : finalB - finalA;
+    });
+  };
+
+  // useEffect(() => {
+  //   const auth = getAuth();
+  //   let postColl: () => void;
+  //   let eventsColl: () => void;
+
+  
+  //   const unsubscribe = onAuthStateChanged(auth, async (user) => {
+  //     if (!user) {
+  //       console.log('No user logged in');
+  //       setError('No user logged in');
+  //       setLoading(false);
+  //       return;
+  //     }
+  
+  //     // console.log('Current user:', {
+  //     //   uid: user.uid,
+  //     //   email: user.email,
+  //     //   emailVerified: user.emailVerified
+  //     // });
+  
+  //     setUid(user.uid);
+
+  //     try {        
+  //       const orgDoc = await getDoc(doc(getFirestore(app), 'organizations', params.orgId!));
+  //       console.log(orgDoc);
+  //       const data = orgDoc.data();
+
+        
+  //       console.log('Raw organization data:', data);
+        
+  //       if (!orgDoc.exists()) {
+  //         setError('Organization not found');
+  //         setLoading(false);
+  //         return;
+  //       }
+        
+  //       const isAdmin = orgDoc.exists() && user.uid === data?.orgId;
+  //       setIsUserAnOrgAdmin(isAdmin);
+
+  //       const followingStatus = await isFollowingOrganization(user.uid, params.orgId!);
+  //       setIsFollowing(followingStatus);
+
+  //       const studentStatus = await isStudent(user.uid);
+  //       setIsStudentUser(studentStatus);
+
+  //       setOrgData(data as Organization);
+        
+  //       // console.log('Admin check:', {
+  //       //   userEmail: user.uid,
+  //       //   orgConnectedEmail: data.orgEmail,
+  //       //   isAdmin
+  //       // });
+              
+  //       const typedData: Organization = {
+  //         orgName: data.orgName || '',
+  //         orgCollege: data.orgCollege || '',
+  //         followerCount: data.followerCount || 0, // new added for followers
+  //         orgAcronym: data.orgAcronym || '',
+  //         orgDescription: data.orgDescription || '',
+  //         orgEmails: Array.isArray(data.orgEmails) ? data.orgEmails : [],
+  //         orgWebsite: data.orgWebsite || '',
+  //         orgFacebook: data.orgFacebook || '',
+  //         orgLocation: data.orgLocation || '',
+  //         orgBio: data.orgBio || '',
+  //         orgLogo: data.orgLogo || '',
+  //         orgBanner: data.orgBanner || '',
+  //         orgPictures: Array.isArray(data.orgPictures) ? data.orgPictures : [],
+  //         orgTags: Array.isArray(data.orgTags) ? data.orgTags : [],
+  //         orgScope: data.orgScope || '',
+  //         orgAffiliations: Array.isArray(data.orgAffiliations) ? data.orgAffiliations : [],
+  //         dateFounded: data.dateFounded || '',
+  //         openForApplications: Boolean(data.openForApplications),
+  //         members: data.members || {},
+  //         applicants: data.applicants || {},
+  //         aspiringApplicants: data.aspiringApplicants || {},
+  //         orgConnectedEmail: data.orgConnectedEmail || '' 
+  //       };
+        
+  //       // might use in the next sprints
+  //       setOrgData(typedData);
+  //       setEditableData({
+  //         // orgName: typedData.orgName,
+  //         // orgCollege: typedData.orgCollege,
+  //         // orgAcronym: typedData.orgAcronym,
+  //         orgDescription: typedData.orgDescription,
+  //         // orgEmails: typedData.orgEmails,
+  //         orgWebsite: typedData.orgWebsite,
+  //         orgFacebook: typedData.orgFacebook,
+  //         // orgLocation: typedData.orgLocation,
+  //         orgBio: typedData.orgBio,
+  //         // orgScope: typedData.orgScope,
+  //         // orgAffiliations: typedData.orgAffiliations,
+  //         // dateFounded: typedData.dateFounded,
+  //         // openForApplications: typedData.openForApplications
+  //       });
+
+  //       postColl = onSnapshot(
+  //         collection(db, 'posts'),
+  //         (snapshot) => {
+  //           const postsData = snapshot.docs
+  //             .filter(doc => doc.data().postOwner === params.orgId) 
+  //             .map(doc => {
+  //               const data = doc.data();
+  //               return {
+  //                 id: doc.id,
+  //                 postId: doc.id, 
+  //                 postOwner: data.postOwner || '',
+  //                 postTitle: data.postTitle || '',
+  //                 postContent: data.postContent || '',
+  //                 postPictures: data.postPictures || [],
+  //                 postTags: data.postTags || [],
+  //                 postDate: data.postDate || '',
+  //                 postTime: data.postTime || ''
+  //               };
+  //             });
+
+  //           setPosts(postsData.sort((a, b) => 
+  //             new Date(b.postDate + ' ' + b.postTime).getTime() - 
+  //             new Date(a.postDate + ' ' + a.postTime).getTime()
+  //           ));
+  //         }
+  //       );
+
+  //      eventsColl = onSnapshot(
+  //         collection(db, 'events'),
+  //         (snapshot) => {
+  //           const eventsData = snapshot.docs
+  //             .filter(doc => doc.data().eventOwner === params.orgId) 
+  //             .map(doc => {
+  //               const data = doc.data();
+  //               return {
+  //                 id: doc.id,
+  //                 eventId: doc.id,
+  //                 eventOwner: data.eventOwner || '',
+  //                 eventName: data.eventName || '',
+  //                 eventDescription: data.eventDescription || '',
+  //                 eventLocation: data.eventLocation || '',
+  //                 eventPictures: data.eventPictures || [],
+  //                 eventTags: data.eventTags || [],
+  //                 eventDate: data.eventDate || '',
+  //                 eventTime: data.eventTime || '',
+  //                 willNotify: data.willNotify || []
+  //               };
+  //             });
+
+  //           setEvents(eventsData.sort((a, b) => 
+  //             new Date(b.eventDate + ' ' + b.eventTime).getTime() - 
+  //             new Date(a.eventDate + ' ' + a.eventTime).getTime()
+  //           ));
+  //         }
+  //       );
+
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error('Error:', err);
+  //       setError('Error loading data');
+  //       setLoading(false);
+  //     }
+  //   });
+
+  //   return () => {
+  //     unsubscribe();
+  //     if (postColl) postColl();
+  //     if (eventsColl) eventsColl();
+  //   };
+  // }, [params.orgId]);
 
   const handleFollow = async () => {
     try {
@@ -296,11 +527,11 @@ export default function OrgPage() {
       alert('Title and content are required');
       return;
     }
-
+  
     const postId = doc(collection(db, 'posts')).id;
     const postDate = new Date().toISOString().split('T')[0];
     const postTime = new Date().toLocaleTimeString();
-
+  
     await addPostData(
       params.orgId!,
       postId,
@@ -311,7 +542,14 @@ export default function OrgPage() {
       postTime,
       newPost.postTags || []
     );
-
+  
+    // Notify followers - Sprint 4
+    const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
+    const followers = orgDoc.data()?.followers || [];
+    await Promise.all(followers.map(async (followerId: string) => {
+      await addNotification(followerId, `New Post from ${orgData?.orgName}: ${newPost.postTitle}`, params.orgId!, postId);
+    }));
+  
     setShowPostModal(false);
     setNewPost({
       postTitle: '',
@@ -411,6 +649,17 @@ export default function OrgPage() {
   const handleCreateEvent = async () => {
     const eventId = doc(collection(db, 'events')).id;
 
+    if (!newEvent.eventName || !newEvent.eventDescription || !newEvent.eventDate || !newEvent.eventTime) {
+      alert('Event name, description, date, and time are required');
+      return;
+    }
+    //Event Date is in the past
+    if (new Date(newEvent.eventDate + ' ' + newEvent.eventTime) < new Date()) {
+      alert('Event date and time must be in the future');
+      return;
+    }
+    
+  
     await addEventData(
       params.orgId!,
       eventId,
@@ -422,7 +671,14 @@ export default function OrgPage() {
       newEvent.eventTime,
       newEvent.eventTags || []
     );
-
+  
+    // Notify followers - Sprint 4
+    const orgDoc = await getDoc(doc(db, 'organizations', params.orgId!));
+    const followers = orgDoc.data()?.followers || [];
+    await Promise.all(followers.map(async (followerId: string) => {
+      await addNotification(followerId, `New Event from ${orgData?.orgName}: ${newEvent.eventName}`, params.orgId!, eventId);
+    }));
+  
     setShowEventModal(false);
     setNewEvent({
       eventName: '',
@@ -594,8 +850,16 @@ export default function OrgPage() {
                     </span>
                   ))}
                 </div>
-                
               )}
+
+              <ApplicationButton
+                orgId={params.orgId!}
+                isOpen={Boolean(orgData?.openForApplications)}
+                formUrl={orgData?.applicationFormUrl || ""}
+                orgName={orgData?.orgName || ""}
+                isAdmin={isUserAnOrgAdmin}
+              />
+            
             </div>
           </div>
         </div>
@@ -722,14 +986,38 @@ export default function OrgPage() {
                           Create New Post
                         </button>
                       )}
-                      
-                      {posts.length === 0 ? (
+                      <div className="d-flex justify-content-end mb-3">
+                        <label className="me-2">Sort:</label>
+                        <select 
+                          className="form-select me-2" 
+                          value={sortCriteria} 
+                          onChange={(e) => setSortCriteria(e.target.value as 'alphabet' | 'date')}
+                        >
+                          <option value="date">Date Created</option>
+                          <option value="alphabet">Alphabetically</option>
+                        </select>
+                        <select 
+                          className="form-select" 
+                          value={sortOrder} 
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                        >
+                          <option value="asc">Ascending</option>
+                          <option value="desc">Descending</option>
+                        </select>
+                      </div>
+                      {loadingPosts ? (
+                        <div className="loading-container">
+                          <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </Spinner>
+                        </div>
+                      ) : posts.length === 0 ? (
                         <div className="text-center p-4">
                           <p className="text-muted">No posts yet</p>
                         </div>
                       ) : (
                         <div className="posts-list">
-                          {posts.map(post => (
+                          {sortPosts(posts).map(post => (
                             <PostCard
                               key={post.id}
                               post={post}
@@ -755,14 +1043,24 @@ export default function OrgPage() {
                           Create New Event
                         </button>
                       )}
-                      
+                      <div className="d-flex justify-content-end mb-3">
+                        <label className="me-2">Sort:</label>
+                        <select 
+                          className="form-select" 
+                          onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                        >
+                          
+                          <option value="asc">Ascending</option>
+                          <option value="desc">Descending</option>
+                        </select>
+                      </div>
                       {events.length === 0 ? (
                         <div className="empty-events">
                           <p className="text-muted">No upcoming events</p>
                         </div>
                       ) : (
                         <div className="events-list">
-                          {events.map(event => (
+                          {sortEvents(events).map(event => (
                             <EventCard
                               key={event.id}
                               event={event}

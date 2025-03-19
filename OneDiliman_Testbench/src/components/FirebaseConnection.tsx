@@ -11,9 +11,15 @@ import {
   FieldValue,
   getDoc,
   setDoc,
+  serverTimestamp,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
   
 } from "firebase/firestore";
 import firebase from "firebase/compat/app";
+import { db } from "../FirebaseConfig";
 
 /*
 Used for setting connection to Firebase
@@ -237,11 +243,18 @@ export async function editOrgLogo(id: string, logo: string) {
   await updateDoc(orgDoc, { orgLogo: logo });
 }
 
-export async function updateAvailabilityOrg(id: string, open: boolean) {
-  const db = getFirestore();
-  const orgDoc = doc(db, "organizations", id);
-
-  await updateDoc(orgDoc, { openForApplications: open ? "Open" : "Closed" });
+export async function updateAvailabilityOrg(orgId: string, isAvailable: boolean): Promise<void> {
+  try {
+    const db = getFirestore();
+    const orgRef = doc(db, 'organizations', orgId);
+    await updateDoc(orgRef, {
+      openForApplications: isAvailable
+    });
+    console.log('Application availability updated successfully');
+  } catch (error) {
+    console.error('Error updating application availability:', error);
+    throw error;
+  }
 }
 
 export async function editOrgDetailsAdmin(
@@ -735,4 +748,53 @@ export async function addEventData(
   });
 
   return docRef.id;
+};
+
+export async function updateApplicationFormUrl(orgId: string, formUrl: string): Promise<void> {
+  try {
+    const db = getFirestore();
+    const orgRef = doc(db, 'organizations', orgId);
+    await updateDoc(orgRef, {
+      applicationFormUrl: formUrl
+    });
+    console.log('Application form URL updated successfully');
+  } catch (error) {
+    console.error('Error updating application form URL:', error);
+    throw error;
+  }
+}
+
+export const addNotification = async (userId: string, message: string, orgId: string, postId: string) => {
+  const db = getFirestore();
+  await addDoc(collection(db, 'notifications'), {
+    userId,
+    message,
+    orgId,
+    postId,
+    timestamp: serverTimestamp(),
+    read: false,
+  });
+};
+
+export const listenToNotifications = (userId: string, callback: (notifications: any[]) => void) => {
+  const notificationsRef = collection(db, 'notifications');
+  const q = query(notificationsRef, where('userId', '==', userId), orderBy('timestamp', 'desc'));
+
+  return onSnapshot(q, (snapshot) => {
+    const notifications = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(notifications);
+  });
+};
+
+
+export const markNotificationAsRead = async (notificationId: string) => {
+  const db = getFirestore();
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await updateDoc(notificationRef, { read: true });
+};
+
+export const deleteNotification = async (notificationId: string) => {
+  const db = getFirestore();
+  const notificationRef = doc(db, 'notifications', notificationId);
+  await deleteDoc(notificationRef);
 };
