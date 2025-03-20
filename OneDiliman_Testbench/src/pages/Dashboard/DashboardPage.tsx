@@ -409,10 +409,10 @@ const handleTagSelect = (tag: string) => {
         // Loading spinner and text  "Loading" while fetching data, color: White
         <div className="loading-message">
           <div className="loading-container" style={{color: "white"}}>
-            <Spinner animation="border" role="status">
+            <Spinner animation="border" role="status" data-testid="dashboard-loading-spinner">
               <span className="visually-hidden">Loading...</span>
             </Spinner>
-            <div style={{color: "white"}} margin-top="100px">
+            <div style={{color: "white"}} margin-top="100px" data-testid="dashboard-fetching-string">
             <p><br/>&nbsp; Fetching Organizations and Data...</p>
           </div>
           </div>

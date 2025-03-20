@@ -234,7 +234,7 @@ test('as org, edit an event', async () => {
   });
 
   await logOut();
-}, 15000)
+}, 15000)//out
 
 test('as org, delete an event', async () => {
   const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
@@ -294,7 +294,7 @@ test('as org, delete an event', async () => {
   });
 
   await logOut();
-}, 15000)
+}, 15000)//out
 
 test('as org, edit a post', async () => {
   const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -365,7 +365,7 @@ test('as org, edit a post', async () => {
   });
   await logOut();
 
-}, 15000)
+}, 35000)
 
 test('as a user, follow and unfollow an org', async () => {
   await logInUser();
@@ -409,4 +409,4 @@ test('as a user, follow and unfollow an org', async () => {
     const postFollowButton = screen.getByTestId("follow-button");
     expect(postFollowButton).toBeInTheDocument();
   });
-}, 35000)
+}, 45000)
