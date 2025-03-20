@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell } from "@fortawesome/free-regular-svg-icons";
+import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import {
   collection,
   getFirestore,
@@ -14,7 +15,8 @@ import {
   updateDoc,
   Timestamp,
   getDocs,
-  limit
+  limit,
+  deleteDoc
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app } from "../../FirebaseConfig";
@@ -169,15 +171,35 @@ export default function NotificationButton() {
 
   const markAllAsRead = async (event: React.MouseEvent) => {
     event.stopPropagation(); 
+    event.preventDefault();
     
-    const unreadNotifications = notifications.filter(notif => !notif.read);
-    console.log(`Marking ${unreadNotifications.length} notifications as read`);
+    const batch = db.batch();
+    notifications.forEach((notif) => {
+      if (!notif.read) {
+        const notifRef = doc(db, "notifications", notif.id);
+        batch.update(notifRef, { read: true });
+      }
+    });
+    await batch.commit();
     
-    await Promise.all(
-    unreadNotifications.map(notif => 
-        updateDoc(doc(db, "notifications", notif.id), { read: true })
-    )
+    setNotifications((prevNotifications) =>
+      prevNotifications.map((notif) => ({ ...notif, read: true }))
     );
+  };
+
+  // Deletes the notification
+  const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault(); // Prevent default action to avoid any unintended behavior
+
+    try {
+      await deleteDoc(doc(db, "notifications", notificationId));
+      setNotifications((prevNotifications) =>
+        prevNotifications.filter((notif) => notif.id !== notificationId)
+      );
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   return (
@@ -207,6 +229,7 @@ export default function NotificationButton() {
             )}
           </div>
           
+
           <div className="notification-list">
             {isLoading ? (
               <div className="notification-loading">Loading...</div>
@@ -217,14 +240,25 @@ export default function NotificationButton() {
                 <div 
                   key={notif.id} 
                   className={`notification-item ${notif.read ? 'read' : 'unread'}`}
-                  onClick={(e) => handleNotificationClick(notif, e)}
                 >
-                  <div className="notification-content">
+                  <div 
+                    className="notification-content"
+                    onClick={(e) => handleNotificationClick(notif, e)}
+                  >
                     <div className="notification-message">{notif.message}</div>
                     <div className="notification-time">
                       {formatTimeAgo(notif.timestamp)}
                     </div>
                   </div>
+                <div>
+                  <button
+                    className="delete-notification-btn"
+                    onClick={(e) => handleDeleteNotification(notif.id, e)}
+                  >
+                    <FontAwesomeIcon icon={faTrashAlt} />
+                  </button>
+                </div>
+
                 </div>
               ))
             )}
