@@ -14,14 +14,12 @@ import {
   updateDoc,
   Timestamp,
   getDocs,
-  limit,
-  writeBatch
+  limit
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app } from "../../FirebaseConfig";
 import { useNavigate } from "react-router-dom";
 import NotificationDetailPopup from "./NotificationDetailPopup";
-import { deleteNotification } from "../FirebaseConnection";
 import "./NotificationButton.css";
 
 interface NotificationData extends DocumentData {
@@ -122,7 +120,7 @@ export default function NotificationButton() {
     read: true
     });
 
-// console.log("Notification properties:", Object.keys(notification));
+    // console.log("Notification properties:", Object.keys(notification));
     // console.log("Notification values:", {
     // postId: notification.postId,
     // eventId: notification.eventId,
@@ -139,32 +137,7 @@ export default function NotificationButton() {
     setShowPopup(false);
     setSelectedNotification(null);
   };
-
-  const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    try {
-      await deleteNotification(notificationId);
-      setNotifications((prevNotifications) =>
-        prevNotifications.filter((notif) => notif.id !== notificationId)
-      );
-    } catch (error) {
-      console.error("Error deleting notification: ", error);
-    }
-  };
-
-  const clearAllNotifications = async (event: React.MouseEvent) => {
-    const batch = writeBatch(db);
-    notifications.forEach((notif) => {
-      const notifRef = doc(db, "notifications", notif.id);
-      batch.delete(notifRef);
-    });
-    try {
-      await batch.commit();
-      setNotifications([]);
-    } catch (error) {
-      console.error("Error clearing notifications: ", error);
-    }
-  };
+  
 
   const formatTimeAgo = (timestamp: Timestamp | null | undefined) => {
     if (!timestamp || !timestamp.toDate) return "";
@@ -232,14 +205,6 @@ export default function NotificationButton() {
                 Mark all as read
               </button>
             )}
-            {notifications.length > 0 && (
-              <button 
-                className="clear-all-btn" 
-                onClick={clearAllNotifications}
-              >
-                Clear all
-              </button>
-            )}
           </div>
           
           <div className="notification-list">
@@ -260,12 +225,6 @@ export default function NotificationButton() {
                       {formatTimeAgo(notif.timestamp)}
                     </div>
                   </div>
-                  <button 
-                    className="delete-notification-btn" 
-                    onClick={(e) => handleDeleteNotification(notif.id, e)}
-                  >
-                    Delete
-                  </button>
                 </div>
               ))
             )}
