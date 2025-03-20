@@ -1,0 +1,115 @@
+.notification-bell-btn {
+    position: relative;
+  }
+  
+  .notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    padding: 0.25rem;
+    font-size: 0.7rem;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  }
+  
+  .notification-dropdown-menu {
+    width: 320px;
+    max-height: 400px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+  }
+  
+  .notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #f8f9fa;
+  }
+  
+  .mark-all-read-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+  
+  .mark-all-read-btn:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+    text-decoration: underline;
+  }
+  
+  .notification-list {
+    max-height: 350px;
+    overflow-y: auto;
+  }
+  
+  .notification-item {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .notification-item:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
+  
+  .notification-item.unread {
+    background-color: rgba(13, 110, 253, 0.08);
+    position: relative;
+  }
+  
+  .notification-item.unread::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: #007bff;
+  }
+  
+  .notification-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .notification-message {
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #212529;
+    word-break: break-word;
+  }
+  
+  .notification-item.unread .notification-message {
+    font-weight: 600;
+  }
+  
+  .notification-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+  
+  .notification-loading,
+  .notification-empty {
+    padding: 1.5rem;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+  }

@@ -16,6 +16,7 @@ import { app } from "../../FirebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 
+import NotificationButton from "./NotificationButton";
 
 
 
@@ -191,6 +192,9 @@ function DisplayLink({ currentPage }) {
         </a>
 
         <form className="d-flex align-buttons">
+        <NotificationButton />
+
+        {/* <form className="d-flex align-buttons">
           <Dropdown>
           <Dropdown.Toggle variant="danger" id="dropdown-basic" className="custom-dropdown-button no-dropdown-icon">
             <FontAwesomeIcon icon={faBell} />
@@ -202,7 +206,7 @@ function DisplayLink({ currentPage }) {
             <Dropdown.Item href="#/action-2" disabled> 
                 You have no notifications.</Dropdown.Item>
           </Dropdown.Menu>
-          </Dropdown>
+          </Dropdown> */}
 
           <div>
             {role == "Site Admin" ? 
