@@ -73,6 +73,7 @@ const ApplicationButton: React.FC<ApplicationButtonDeets> = ({
       <button 
         className={buttonClass}
         onClick={handleButtonClick}
+        data-testid="application-button"
       >
         {buttonText}
         {buttonIcon}
