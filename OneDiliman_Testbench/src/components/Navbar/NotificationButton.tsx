@@ -16,7 +16,8 @@ import {
   Timestamp,
   getDocs,
   limit,
-  deleteDoc
+  deleteDoc,
+  writeBatch
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { app } from "../../FirebaseConfig";
@@ -173,7 +174,7 @@ export default function NotificationButton() {
     event.stopPropagation(); 
     event.preventDefault();
     
-    const batch = db.batch();
+    const batch = writeBatch(db);
     notifications.forEach((notif) => {
       if (!notif.read) {
         const notifRef = doc(db, "notifications", notif.id);

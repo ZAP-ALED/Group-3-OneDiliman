@@ -1,245 +1,289 @@
-import React, { useEffect, useState } from "react";
-import Dropdown from "react-bootstrap/Dropdown";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBell } from "@fortawesome/free-regular-svg-icons";
-import {
-  collection,
-  getFirestore,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-  DocumentData,
-  doc,
-  updateDoc,
-  Timestamp,
-  getDocs,
-  limit
-} from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { app } from "../../FirebaseConfig";
-import { useNavigate } from "react-router-dom";
-import NotificationDetailPopup from "./NotificationDetailPopup";
-import "./NotificationButton.css";
+import React, { useState, useEffect } from 'react';
+import Modal from 'react-bootstrap/Modal';
+import Spinner from 'react-bootstrap/Spinner';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { 
+  faCalendarDay, 
+  faClock, 
+  faLocationDot,
+  faUser,
+  faExternalLinkAlt
+} from '@fortawesome/free-solid-svg-icons';
+import { doc, getDoc, getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { app } from '../../FirebaseConfig';
+import { Link } from 'react-router-dom';
+import './NotificationDetailPopup.css';
 
-interface NotificationData extends DocumentData {
+interface Post {
   id: string;
-  message: string;
-  userId: string;
-  timestamp: Timestamp;
-  read: boolean;
-  orgId?: string;
-  postId?: string;
+  postOwner: string;
+  postTitle: string;
+  postContent: string;
+  postPictures: string[];
+  postTags: string[];
+  postDate: string;
+  postTime: string;
 }
 
-export default function NotificationButton() {
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [showPopup, setShowPopup] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState<NotificationData | null>(null);
+interface Event {
+  id: string;
+  eventId: string;
+  eventOwner: string;
+  eventName: string;
+  eventDescription: string;
+  eventLocation: string;
+  eventPictures: string[];
+  eventTags: string[];
+  eventDate: string;
+  eventTime: string;
+  willNotify: string[];
+}
+
+interface Organization {
+  orgName: string;
+  orgLogo: string;
+}
+
+interface NotificationDetailPopupProps {
+  show: boolean;
+  onHide: () => void;
+  notificationType?: 'post' | 'event' | null; 
+  itemId: string | null;
+  orgId: string | null;
+}
+
+const NotificationDetailPopup: React.FC<NotificationDetailPopupProps> = ({
+  show,
+  onHide,
+  notificationType,
+  itemId,
+  orgId
+}) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [post, setPost] = useState<Post | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
+  const [organization, setOrganization] = useState<Organization | null>(null);
   
-  const navigate = useNavigate();
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-        setNotifications([]);
-        setIsLoading(false);
+    const fetchData = async () => {
+      if (!show || !itemId || !orgId) {
+        return;
       }
-    });
-
-    return () => unsubscribeAuth();
-  }, [auth]);
-
-  useEffect(() => {
-    if (!userId) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    const fetchInitialData = async () => {
-        const q = query(
-            collection(db, "notifications"),
-            where("userId", "==", userId),
-            limit(10)
-        );
+      
+      setLoading(true);
+      setError('');
+      setPost(null);
+      setEvent(null);
+      
+      try {
+        const db = getFirestore(app);
         
-        const querySnapshot = await getDocs(q);
+        // Fetch organization data
+        const orgDoc = await getDoc(doc(db, 'organizations', orgId));
+        if (orgDoc.exists()) {
+          setOrganization(orgDoc.data() as Organization);
+        } else {
+          console.warn('Organization document not found:', orgId);
+        }
+    
+        // Fetch post data 
+        let postFound = false;
+        const postsCollection = collection(db, 'posts');
+        const postQuery = query(postsCollection, where('postId', '==', itemId));
+        const postQuerySnapshot = await getDocs(postQuery);
         
-        const notifArray: NotificationData[] = [];
-        querySnapshot.forEach(doc => {
-            notifArray.push({ id: doc.id, ...doc.data() } as NotificationData);
-        });
+        if (!postQuerySnapshot.empty) {
+          const postDoc = postQuerySnapshot.docs[0];
+          setPost({ id: postDoc.id, ...postDoc.data() } as Post);
+          postFound = true;
+        } else {
+          const eventsCollection = collection(db, 'events');
+          const eventQuery = query(eventsCollection, where('eventId', '==', itemId));
+          const eventQuerySnapshot = await getDocs(eventQuery);
+          
+          if (!eventQuerySnapshot.empty) {
+            const eventDoc = eventQuerySnapshot.docs[0];
+            console.log('Found event with eventId field');
+            setEvent({ id: eventDoc.id, ...eventDoc.data() } as Event);
+            postFound = true; 
+          } else {
+            console.error("Content not found (ID: ${itemId})");
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching details");
+      } finally {
+        setLoading(false);
+      }
     };
     
-    fetchInitialData();
-
-    const notifQuery = query(
-      collection(db, "notifications"),
-      where("userId", "==", userId)
-    );
-
-    const unsubscribe = onSnapshot(
-      notifQuery,
-      (snapshot) => {
-        const notifArray: NotificationData[] = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as NotificationData[];
-        
-        notifArray.sort((a, b) => {
-          const timeA = a.timestamp?.toDate?.() || new Date(0);
-          const timeB = b.timestamp?.toDate?.() || new Date(0);
-          return timeB.getTime() - timeA.getTime();
-        });
-        
-        setNotifications(notifArray);
-        setIsLoading(false);
-      },
-      (error) => {
-        setIsLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [userId, db]);
-
-  const handleNotificationClick = async (notification: NotificationData, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    console.log("Notification clicked:", notification);
-    
-    await updateDoc(doc(db, "notifications", notification.id), {
-    read: true
-    });
-
-    // console.log("Notification properties:", Object.keys(notification));
-    // console.log("Notification values:", {
-    // postId: notification.postId,
-    // eventId: notification.eventId,
-    // orgId: notification.orgId,
-    // message: notification.message
-    // });
-      
-
-    setSelectedNotification(notification);
-    setShowPopup(true);
-  };
+    fetchData();
+  }, [show, notificationType, itemId, orgId]);
   
-  const handlePopupClose = () => {
-    setShowPopup(false);
-    setSelectedNotification(null);
-  };
-  
-
-  const formatTimeAgo = (timestamp: Timestamp | null | undefined) => {
-    if (!timestamp || !timestamp.toDate) return "";
-
-    const now = new Date();
-    const notifTime = timestamp.toDate();
-    const diffInMs = now.getTime() - notifTime.getTime();
-    const diffInSecs = Math.floor(diffInMs / 1000);
-    const diffInMins = Math.floor(diffInSecs / 60);
-    const diffInHours = Math.floor(diffInMins / 60);
-    const diffInDays = Math.floor(diffInHours / 24);
-
-    if (diffInSecs < 60) {
-    return "just now";
-    } else if (diffInMins < 60) {
-    return `${diffInMins} min${diffInMins > 1 ? 's' : ''} ago`;
-    } else if (diffInHours < 24) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    } else if (diffInDays < 7) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-    } else {
-    return notifTime.toLocaleDateString();
+  const formatDate = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return dateStr;
     }
-  };
-
-  const getUnreadCount = () => {
-    return notifications.filter(notif => !notif.read).length;
-  };
-
-  const markAllAsRead = async (event: React.MouseEvent) => {
-    event.stopPropagation(); 
-    
-    const unreadNotifications = notifications.filter(notif => !notif.read);
-    console.log(`Marking ${unreadNotifications.length} notifications as read`);
-    
-    await Promise.all(
-    unreadNotifications.map(notif => 
-        updateDoc(doc(db, "notifications", notif.id), { read: true })
-    )
-    );
   };
 
   return (
-    <>
-      <Dropdown>
-        <Dropdown.Toggle
-          variant="danger"
-          id="dropdown-basic"
-          className="custom-dropdown-button no-dropdown-icon notification-bell-btn"
-        >
-          <FontAwesomeIcon icon={faBell} />
-          {getUnreadCount() > 0 && (
-            <span className="notification-badge">{getUnreadCount()}</span>
+    <Modal 
+      show={show} 
+      onHide={onHide}
+      centered
+      size="lg"
+      className="notification-detail-popup"
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>
+          {organization?.orgName && (
+            <div className="org-header">
+              {organization.orgLogo && (
+                <img 
+                  src={organization.orgLogo} 
+                  alt={organization.orgName} 
+                  className="org-logo"
+                />
+              )}
+              <span>{organization.orgName}</span>
+            </div>
           )}
-        </Dropdown.Toggle>
-
-        <Dropdown.Menu className="notification-dropdown-menu">
-          <div className="notification-header">
-            <h6 className="m-0">Notifications</h6>
-            {getUnreadCount() > 0 && (
-              <button 
-                className="mark-all-read-btn" 
-                onClick={markAllAsRead}
-              >
-                Mark all as read
-              </button>
+        </Modal.Title>
+      </Modal.Header>
+      
+      <Modal.Body>
+        {loading ? (
+          <div className="loading-container">
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        ) : error ? (
+          <div className="error-message">
+            <p>{error}</p>
+            <p className="error-help">This may happen if the content has been deleted or is no longer available.</p>
+            {orgId && (
+              <Link to={`/dashboard/${orgId}`} className="btn btn-sm btn-outline-primary mt-2" onClick={onHide}>
+                Go to Organization Page
+              </Link>
             )}
           </div>
-          
-          <div className="notification-list">
-            {isLoading ? (
-              <div className="notification-loading">Loading...</div>
-            ) : notifications.length === 0 ? (
-              <div className="notification-empty">No notifications</div>
-            ) : (
-              notifications.map((notif) => (
-                <div 
-                  key={notif.id} 
-                  className={`notification-item ${notif.read ? 'read' : 'unread'}`}
-                  onClick={(e) => handleNotificationClick(notif, e)}
-                >
-                  <div className="notification-content">
-                    <div className="notification-message">{notif.message}</div>
-                    <div className="notification-time">
-                      {formatTimeAgo(notif.timestamp)}
-                    </div>
-                  </div>
+        ) : post ? (
+          <div className="post-detail">
+            <h2 className="post-title">{post.postTitle}</h2>
+            
+            <div className="post-meta">
+              <div className="post-date">
+                {formatDate(post.postDate)} at {post.postTime}
+              </div>
+              
+              {post.postTags && post.postTags.length > 0 && (
+                <div className="post-tags">
+                  {post.postTags.map((tag, index) => (
+                    <span key={index} className="tag">{tag}</span>
+                  ))}
                 </div>
-              ))
+              )}
+            </div>
+            
+            <div className="post-content">
+              {post.postContent}
+            </div>
+            
+            {post.postPictures && post.postPictures.length > 0 && (
+              <div className="post-images">
+                {post.postPictures.map((img, index) => (
+                  <img 
+                    key={index} 
+                    src={img} 
+                    alt={`Post image ${index + 1}`} 
+                    className="post-image"
+                  />
+                ))}
+              </div>
             )}
           </div>
-        </Dropdown.Menu>
-      </Dropdown>
-  
-      {selectedNotification && (
-        <NotificationDetailPopup
-          show={showPopup}
-          onHide={handlePopupClose}
-          itemId={selectedNotification.postId}
-          orgId={selectedNotification.orgId}
-        />
-      )}
-    </>
+        ) : event ? (
+          <div className="event-detail">
+            <h2 className="event-title">{event.eventName}</h2>
+            
+            <div className="event-meta">
+              <div className="event-date-time">
+                <div className="event-date">
+                  <FontAwesomeIcon icon={faCalendarDay} className="event-icon" />
+                  <span>{formatDate(event.eventDate)}</span>
+                </div>
+                <div className="event-time">
+                  <FontAwesomeIcon icon={faClock} className="event-icon" />
+                  <span>{event.eventTime}</span>
+                </div>
+              </div>
+              
+              {event.eventLocation && (
+                <div className="event-location">
+                  <FontAwesomeIcon icon={faLocationDot} className="event-icon" />
+                  <span>{event.eventLocation}</span>
+                </div>
+              )}
+              
+              {event.willNotify && event.willNotify.length > 0 && (
+                <div className="event-attendees">
+                  <FontAwesomeIcon icon={faUser} className="event-icon" />
+                  <span>{event.willNotify.length} attending</span>
+                </div>
+              )}
+            </div>
+            
+            {event.eventTags && event.eventTags.length > 0 && (
+              <div className="event-tags">
+                {event.eventTags.map((tag, index) => (
+                  <span key={index} className="tag">{tag}</span>
+                ))}
+              </div>
+            )}
+            
+            <div className="event-description">
+              {event.eventDescription}
+            </div>
+            
+            {event.eventPictures && event.eventPictures.length > 0 && (
+              <div className="event-images">
+                {event.eventPictures.map((img, index) => (
+                  <img 
+                    key={index} 
+                    src={img} 
+                    alt={`Event image ${index + 1}`} 
+                    className="event-image"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="no-data">No details available</div>
+        )}
+      </Modal.Body>
+
+      <Modal.Footer>
+        {(post || event) && orgId && (
+          <Link to={`/dashboard/${orgId}`} className="btn btn-primary" onClick={onHide}>
+            <FontAwesomeIcon icon={faExternalLinkAlt} className="me-2" />
+            View in Organization Page
+          </Link>
+        )}
+        <button className="btn btn-secondary" onClick={onHide}>
+          Close
+        </button>
+      </Modal.Footer>
+    </Modal>
   );
-}
+};
+
+export default NotificationDetailPopup;
