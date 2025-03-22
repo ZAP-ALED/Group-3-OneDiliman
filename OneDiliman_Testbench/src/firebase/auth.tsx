@@ -22,7 +22,8 @@ export const doCreateUserWithEmailAndPassword = async (formData: any) => {
                 memberOrgs: {},
                 orgBookmarks: {},
                 isVerified: false,
-                followedOrgs: []
+                followedOrgs: [],
+                likedPosts: [],
             });
 
             await sendEmailVerification(cred.user);
@@ -187,7 +188,9 @@ export const doCreatePost = async (formData: any) => {
         postPictures: formData.postPictures !== "" ? formData.postPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],     // Content of the post in image
         postTags: formData.postTags !== "" ? formData.postTags.toString().split(",").toString().split(",") : [],    // What is the post about
         postDate: formData.postDate,            // Date the post is created
-        postTime: formData.postTime,            // Time the post is created       
+        postTime: formData.postTime,            // Time the post is created
+        postLikes: 0,
+        usersLiked: [],       
     });
 }
 
@@ -293,6 +296,71 @@ export const followOrganization = async (userId: string, orgId: string) => {
       }
     } catch (error) {
       console.error('Error checking if user is a student:', error);
+      return false;
+    }
+  };
+
+  export const likePost = async (userId: string, postId: string) => {
+    const db = getFirestore(app);
+  
+    try {
+      const userRef = doc(db, 'users', userId);
+      const postRef = doc(db, 'posts', postId);
+  
+      // Add user ID to the post's usersLiked array and increment like count
+      await updateDoc(postRef, {
+        usersLiked: arrayUnion(userId),
+        postLikes: increment(1)
+      });
+  
+      // Add post ID to the user's likedPosts array
+      await updateDoc(userRef, {
+        likedPosts: arrayUnion(postId)
+      });
+  
+      console.log('User successfully liked the post!');
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  export const unlikePost = async (userId: string, postId: string) => {
+    const db = getFirestore(app);
+  
+    try {
+      const userRef = doc(db, 'users', userId);
+      const postRef = doc(db, 'posts', postId);
+  
+      await updateDoc(postRef, {
+        usersLiked: arrayRemove(userId),
+        postLikes: increment(-1)
+      });
+  
+      await updateDoc(userRef, {
+        likedPosts: arrayRemove(postId)
+      });
+  
+      console.log('User successfully unliked the post!');
+    } catch (error) {
+      console.error('Error unliking post:', error);
+    }
+  };
+
+  export const hasLikedPost = async (userId: string, postId: string): Promise<boolean> => {
+    const db = getFirestore(app);
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        return userData.likedPosts && userData.likedPosts.includes(postId);
+      } else {
+        console.error('User document does not exist');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking if user liked post:', error);
       return false;
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPen, 
@@ -6,6 +6,10 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/Modal';
 import './PostCard.css';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { likePost, unlikePost, isStudent, hasLikedPost } from '../../firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
 
 interface Post {
   id: string;
@@ -16,6 +20,8 @@ interface Post {
   postTags: string[];
   postDate: string;
   postTime: string;
+  postLikes?: number;
+  usersLiked?: string[];
 }
 
 interface PostCardDeets {
@@ -26,9 +32,15 @@ interface PostCardDeets {
 }
 
 const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onDelete }) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
   const [showFullContent, setShowFullContent] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState<number>(post.postLikes ?? 0);
+  const [isStudentUser, setIsStudentUser] = useState<boolean | null>(null);
+
 
   const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -52,6 +64,47 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
     e.stopPropagation();
     action();
   };
+
+
+  //for user likes, changes the button
+  useEffect(() => {
+    if (!user || !post) return;
+  
+    const checkLikedStatus = async () => {
+      const liked = await hasLikedPost(user.uid, post.id);
+      setLiked(liked);
+    };
+  
+    checkLikedStatus();
+  }, [user, post]);
+
+  //for post like number, changes number
+  useEffect(() => {
+    const fetchLikeCount = async () => {
+      const db = getFirestore();
+      const postRef = doc(db, 'posts', post.id);
+      const postSnap = await getDoc(postRef);
+  
+      if (postSnap.exists()) {
+        const data = postSnap.data();
+        setLikeCount(data.postLikes ?? 0);
+      }
+    };
+  
+    fetchLikeCount();
+  }, [post.id]);
+  
+  //for isStudent
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (user) {
+        const result = await isStudent(user.uid);
+        setIsStudentUser(result);
+      }
+    };
+    checkUserRole();
+  }, [user]);
+  
 
   return (
     <div className="post-card" onClick={handleCardClick}>
@@ -96,6 +149,43 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
               <span key={index} className="type-badge">{tag}</span>
             ))}
           </div>
+        
+
+        {/* Like Button */}
+
+        {isStudentUser ? (
+          // Student view: Like button + like count
+          <div className="like-section d-flex align-items-center gap-2">
+            <button
+              className={`btn btn-sm ${liked ? 'btn-danger' : 'btn-outline-primary'}`}
+              onClick={async (e) => {
+                e.stopPropagation();
+                if (!user) return;
+
+                if (liked) {
+                  await unlikePost(user.uid, post.id);
+                  setLiked(false);
+                  setLikeCount(prev => prev - 1);
+                } else {
+                  await likePost(user.uid, post.id);
+                  setLiked(true);
+                  setLikeCount(prev => prev + 1);
+                }
+              }}
+            >
+              {liked ? 'Unlike' : 'Like'}
+            </button>
+            <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
+          </div>
+        ) : (
+          // Non-student view: just the count
+          <div className="like-section d-flex align-items-center gap-2">
+            <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
+          </div>
+        )}
+
+
+
 
           {isUserAnOrgAdmin && (
             <div className="action-buttons">

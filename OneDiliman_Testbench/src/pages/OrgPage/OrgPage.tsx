@@ -33,6 +33,8 @@ interface Post {
   postTags: string[];
   postDate: string;
   postTime: string;
+  postLikes?: number;
+  usersLiked?: string[];
 }
 
 type EditableOrgData = Partial<Organization>;
@@ -75,7 +77,9 @@ export default function OrgPage() {
     postPictures: [],
     postTags: [],
     postDate: '',
-    postTime: ''
+    postTime: '',
+    postLikes: 0,
+    usersLiked: [],
   });
   const [showPostModal, setShowPostModal] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
