@@ -94,7 +94,7 @@ test('as user, check for application button on org page', async  () => {
     await logOut();
     }, 50000);
 
-  test('as org, create a post, then log out. log in as user, check if post appears in notifications', async  () => {
+  test('as org, create a post, then log out. log in as user, check if post appears in notifications, then delete notif', async  () => {
     await logInOrg();
     cleanup();
   
@@ -149,8 +149,18 @@ test('as user, check for application button on org page', async  () => {
     const notificationButton = await screen.findByTestId("notification-button");
     await expect(notificationButton).toBeDefined();
     await fireEvent.click(notificationButton)
-    const notificationMessage = await screen.findAllByTestId("notification-message");
-    await expect(notificationMessage[0].textContent).toBe("New Post from New New Org: I really love dogs!")
+    const notificationMessageBeforeDelete = await screen.findAllByTestId("notification-message");
+    await expect(notificationMessageBeforeDelete[0].textContent).toBe("New Post from New New Org: I really love dogs!")
+    //delete notification
+    const deleteNotificationButton = await screen.findAllByTestId("delete-notification");
+    await expect(deleteNotificationButton[0]).toBeDefined();
+    await fireEvent.click(deleteNotificationButton[0]);
 
+    await new Promise((r) => setTimeout(r, 1000));
+    
+    const notificationMessageAfterDelete = await screen.queryAllByTestId("notification-message");
+    if (notificationMessageAfterDelete.length != 0){
+      await expect(notificationMessageAfterDelete[0].textContent).not.toBe("New Post from New New Org: I really love dogs!")
+    }
     await logOut();
     }, 50000);
