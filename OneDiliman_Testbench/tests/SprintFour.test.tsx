@@ -130,7 +130,27 @@ test('as user, check for application button on org page', async  () => {
     await fireEvent.change(titleField, {target: {value: "I really love dogs!"}} );
     const contentField = await screen.findByTestId("post-content-field");
     await expect(contentField).toBeDefined();
-    await fireEvent.change(contentField, {target: {value: "Dogs are wonderful, they are so cute! Woof Woof Woof!"}})
+    await fireEvent.change(contentField, {target: {value: "Dogs are wonderful, they are so cute! Woof Woof Woof!"}});
+    const createPostButton = await screen.findByTestId("create-post-button");
+    await expect(createPostButton).toBeDefined();
+    await fireEvent.click(createPostButton);
+
+    await new Promise((r) => setTimeout(r, 3000));
   
+    await logOut();
+    //login as user
+    await logInUser();
+    cleanup();
+  
+    await render(
+      <MemoryRouter><DashboardPage /></MemoryRouter>);
+    await new Promise((r) => setTimeout(r, 5000));
+    //click notification button
+    const notificationButton = await screen.findByTestId("notification-button");
+    await expect(notificationButton).toBeDefined();
+    await fireEvent.click(notificationButton)
+    const notificationMessage = await screen.findAllByTestId("notification-message");
+    await expect(notificationMessage[0].textContent).toBe("New Post from New New Org: I really love dogs!")
+
     await logOut();
     }, 50000);
