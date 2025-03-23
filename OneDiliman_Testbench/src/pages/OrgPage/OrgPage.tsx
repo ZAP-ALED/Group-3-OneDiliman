@@ -985,6 +985,7 @@ export default function OrgPage() {
                         <button 
                           className="btn btn-primary mb-4"
                           onClick={() => setShowPostModal(true)}
+                          data-testid="create-post"
                         >
                           <FontAwesomeIcon icon={faPlus} className="me-2"/>
                           Create New Post
