@@ -116,11 +116,21 @@ test('as user, check for application button on org page', async  () => {
         </MemoryRouter>
     );
     await new Promise((r) => setTimeout(r, 5000));
-    await waitFor(() => {
-        const applicationButton = screen.findByTestId("application-button");
-        expect(applicationButton).toBeDefined();
-    });
-
-    
+    //click post tab
+    const postsTab = await screen.findByTestId("posts-tab");
+    await expect(postsTab).toBeDefined();
+    await fireEvent.click(postsTab);
+    //click create post button
+    const createPost = await screen.findByTestId("create-post");
+    await expect(createPost).toBeDefined();
+    await userEvent.click(createPost);
+    //fill in title, content
+    const titleField = await screen.findByTestId("post-title-field");
+    await expect(titleField).toBeDefined();
+    await fireEvent.change(titleField, {target: {value: "I really love dogs!"}} );
+    const contentField = await screen.findByTestId("post-content-field");
+    await expect(contentField).toBeDefined();
+    await fireEvent.change(contentField, {target: {value: "Dogs are wonderful, they are so cute! Woof Woof Woof!"}})
+  
     await logOut();
     }, 50000);
