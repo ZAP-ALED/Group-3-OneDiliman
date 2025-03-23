@@ -256,6 +256,7 @@ export default function NotificationButton() {
                   <button
                     className="delete-notification-btn"
                     onClick={(e) => handleDeleteNotification(notif.id, e)}
+                    data-testid="delete-notification"
                   >
                     <FontAwesomeIcon icon={faTrashAlt} />
                   </button>
