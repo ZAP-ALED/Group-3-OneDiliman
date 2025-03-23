@@ -1098,6 +1098,7 @@ export default function OrgPage() {
                 value={newPost.postTitle}
                 onChange={(e) => setNewPost({...newPost, postTitle: e.target.value})}
                 placeholder='Title'
+                data-testid="post-title-field"
               />
             </div>
             <div className="mb-3">
@@ -1108,6 +1109,7 @@ export default function OrgPage() {
                 value={newPost.postContent}
                 onChange={(e) => setNewPost({...newPost, postContent: e.target.value})}
                 placeholder='Content'
+                data-testid="post-content-field"
               />
             </div>
             <div className="mb-3">
