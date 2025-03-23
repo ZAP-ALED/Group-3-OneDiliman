@@ -93,3 +93,34 @@ test('as user, check for application button on org page', async  () => {
    
     await logOut();
     }, 50000);
+
+  test('as org, create a post, then log out. log in as user, check if post appears in notifications', async  () => {
+    await logInOrg();
+    cleanup();
+  
+    await render(
+      <MemoryRouter><DashboardPage /></MemoryRouter>);
+    const user = userEvent.setup();
+    await new Promise((r) => setTimeout(r, 5000));
+  
+    const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+    await expect(orgCard).toBeDefined();
+
+    await userEvent.click(orgCard);
+
+    await render(
+        <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+            <Routes>
+                <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+            </Routes>
+        </MemoryRouter>
+    );
+    await new Promise((r) => setTimeout(r, 5000));
+    await waitFor(() => {
+        const applicationButton = screen.findByTestId("application-button");
+        expect(applicationButton).toBeDefined();
+    });
+
+    
+    await logOut();
+    }, 50000);
