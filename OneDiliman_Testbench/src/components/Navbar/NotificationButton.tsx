@@ -210,6 +210,7 @@ export default function NotificationButton() {
           variant="danger"
           id="dropdown-basic"
           className="custom-dropdown-button no-dropdown-icon notification-bell-btn"
+          data-testid="notification-button"
         >
           <FontAwesomeIcon icon={faBell} />
           {getUnreadCount() > 0 && (
@@ -246,7 +247,7 @@ export default function NotificationButton() {
                     className="notification-content"
                     onClick={(e) => handleNotificationClick(notif, e)}
                   >
-                    <div className="notification-message">{notif.message}</div>
+                    <div className="notification-message" data-testid="notification-message">{notif.message}</div>
                     <div className="notification-time">
                       {formatTimeAgo(notif.timestamp)}
                     </div>
