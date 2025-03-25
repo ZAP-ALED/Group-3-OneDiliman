@@ -296,76 +296,7 @@ test('as org, delete an event', async () => {
   await logOut();
 }, 15000)//out
 
-test('as org, edit a post', async () => {
-  const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
 
-  await logInOrg();
-  await new Promise((r) => setTimeout(r, 5000));
-  await cleanup;
-
-  await render(
-    <MemoryRouter><DashboardPage /></MemoryRouter>
-  );
-  const user = userEvent.setup();
-  await new Promise((r) => setTimeout(r, 5000));
-
-  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
-  expect(orgCard).toBeInTheDocument();
-
-  await user.click(orgCard);
-  await render(
-    <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
-      <Routes> 
-        <Route path="/dashboard/:orgId" element ={<OrgPage />} />
-      </Routes>
-    </MemoryRouter>
-  );
-
-  await waitFor(() => {
-    const about = screen.getByText(/Facebook/i);
-    expect(about).toBeInTheDocument();
-  });
-
-  await waitFor(() => {
-      const posts = screen.getByTestId("posts-tab");
-      user.click(posts);
-  });
-
-  await new Promise((r) => setTimeout(r, 2000));
-
-  
-  await waitFor(() => {
-    const editButtons = screen.queryAllByTestId("edit-post-button");
-    user.click(editButtons[0]);
-
-    const postTitleField = screen.getByTestId("edit-post-title")
-    const postContentField = screen.getByTestId("edit-post-content");
-    const saveChangesField = screen.getByTestId("save-changes-post");
-
-    expect(postTitleField).toBeInTheDocument();
-    expect(postContentField).toBeInTheDocument();
-    expect(saveChangesField).toBeInTheDocument();
-
-    fireEvent.change(postTitleField, {target: {value: "post edit name"}});
-    fireEvent.change(postContentField, {target: {value: "post edit desc"}});
-    fireEvent.click(saveChangesField);
-  })
-  // Verify that the alert was called
-  await waitFor(() => {
-    expect(spyAlert).toHaveBeenCalledWith('Post updated successfully!');
-  });
-  // Restore the original alert function
-  spyAlert.mockRestore();
-
-  // Verify that the changes are reflected
-  await waitFor(() => {
-    expect(screen.queryAllByText("post edit name").length).toBeGreaterThan(0);
-    expect(screen.queryAllByText("post edit desc").length).toBeGreaterThan(0);
-
-  });
-  await logOut();
-
-}, 35000)
 
 test('as a user, follow and unfollow an org', async () => {
   await logInUser();
@@ -393,20 +324,34 @@ test('as a user, follow and unfollow an org', async () => {
       expect(about).toBeInTheDocument();
   });
 
-  const preFollowButton = await screen.getByTestId("follow-button");
-  expect(preFollowButton).toBeInTheDocument();
-  userEvent.click(preFollowButton);
+  const checkFollowButton = await screen.queryAllByTestId("follow-button");
+  const checkUnfollowButton = await screen.queryAllByTestId("unfollow-button");
 
-  await new Promise((r) => setTimeout(r, 2000));
+  if(checkFollowButton.length == 1){
+    expect(checkFollowButton[0]).toBeInTheDocument();
+    userEvent.click(checkFollowButton[0]);
+    await new Promise((r) => setTimeout(r, 2000));
 
-  const unfollowButton = screen.getByTestId("unfollow-button");
-  expect(unfollowButton).toBeInTheDocument();
-  userEvent.click(unfollowButton);
+    const unfollowButton = await screen.getByTestId("unfollow-button");
+    expect(unfollowButton).toBeInTheDocument();
+    userEvent.click(unfollowButton);
 
-  await new Promise((r) => setTimeout(r, 2000));
-
-  await waitFor(() => {
-    const postFollowButton = screen.getByTestId("follow-button");
+    await new Promise((r) => setTimeout(r, 2000));
+    const postFollowButton = await screen.getByTestId("follow-button");
     expect(postFollowButton).toBeInTheDocument();
-  });
+  }
+  else {
+    expect(checkUnfollowButton[0]).toBeInTheDocument();
+    userEvent.click(checkUnfollowButton[0]);
+  
+    await new Promise((r) => setTimeout(r, 2000));
+  
+    const followButton = await screen.getByTestId("follow-button");
+    expect(followButton).toBeInTheDocument();
+    userEvent.click(followButton);
+
+    const postUnfollowButton = await screen.getByTestId("unfollow-button");
+    expect(postUnfollowButton).toBeInTheDocument();
+  }
+  
 }, 45000)

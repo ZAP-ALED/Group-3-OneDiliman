@@ -49,7 +49,7 @@ async function logOut() {
 
 test('navigate to org page from dashboard, create a post, delete a post', async  () => {
   const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
-
+  const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
   await logInOrg();
   cleanup();
 
@@ -113,6 +113,39 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
       expect(uploadedImage).toBeDefined();
     });
 
+    await new Promise((r) => setTimeout(r, 2000));
+  
+    
+    await waitFor(() => {
+      const editButtons = screen.queryAllByTestId("edit-post-button");
+      user.click(editButtons[0]);
+  
+      const postTitleField = screen.getByTestId("edit-post-title")
+      const postContentField = screen.getByTestId("edit-post-content");
+      const saveChangesField = screen.getByTestId("save-changes-post");
+  
+      expect(postTitleField).toBeInTheDocument();
+      expect(postContentField).toBeInTheDocument();
+      expect(saveChangesField).toBeInTheDocument();
+  
+      fireEvent.change(postTitleField, {target: {value: "post edit name"}});
+      fireEvent.change(postContentField, {target: {value: "post edit desc"}});
+      fireEvent.click(saveChangesField);
+    })
+    // Verify that the alert was called
+    await waitFor(() => {
+      expect(spyAlert).toHaveBeenCalledWith('Post updated successfully!');
+    });
+    // Restore the original alert function
+    spyAlert.mockRestore();
+  
+    // Verify that the changes are reflected
+    await waitFor(() => {
+      expect(screen.queryAllByText("post edit name").length).toBeGreaterThan(0);
+      expect(screen.queryAllByText("post edit desc").length).toBeGreaterThan(0);
+  
+    });
+
     // Delete the specific post using the first delete button found
     await waitFor(() =>{
       const deleteButtons = screen.queryAllByTestId("delete-post-button");
@@ -132,6 +165,8 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
 
     await logOut();
   }, 50000);
+
+
 
   test('navigate to org page from dashboard, unable to find delete post button', async  () => {
     await logInUser();
