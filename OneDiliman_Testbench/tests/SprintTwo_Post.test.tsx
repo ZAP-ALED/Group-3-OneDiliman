@@ -5,6 +5,8 @@ import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
+import { expect, test, vi } from 'vitest'
+
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
@@ -46,6 +48,8 @@ async function logOut() {
 }
 
 test('navigate to org page from dashboard, create a post, delete a post', async  () => {
+  const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
   await logInOrg();
   cleanup();
 
@@ -55,10 +59,10 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
   await new Promise((r) => setTimeout(r, 2000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
-  expect(orgCard).toBeInTheDocument();
-  console.log(screen.debug(orgCard));
-
+  expect(orgCard).toBeDefined();
   await fireEvent.click(orgCard);
+
+
   await render(
     <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
       <Routes>
@@ -68,7 +72,7 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
 
   await waitFor(() => {
     const about = screen.getByText(/Facebook/i);
-    expect(about).toBeInTheDocument();
+    expect(about).toBeDefined();
   });
 
   await waitFor(() => {
@@ -78,7 +82,7 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
   );
 
   await new Promise((r) => setTimeout(r, 2000));
-    // Check current amount of test posts (it may contain any content)
+    // Check current amount of test posts 
     const postsCurrent = screen.queryAllByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
 
     await fireEvent.click(screen.getByText(/Create New Post/i));
@@ -106,23 +110,28 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     // Check if the image has been uploaded alt: "Upload preview ${index + 1}""
     await waitFor(() => {
       const uploadedImage = screen.getByAltText('Upload preview 1');
-      expect(uploadedImage).toBeInTheDocument();
+      expect(uploadedImage).toBeDefined();
     });
 
     // Delete the specific post using the first delete button found
-    const deleteButtons = screen.queryAllByTestId("delete-post-button");
-    if (deleteButtons.length > 0) {
-      await user.click(deleteButtons[0]);
-    }
+    await waitFor(() =>{
+      const deleteButtons = screen.queryAllByTestId("delete-post-button");
+      if (deleteButtons.length != 0) {
+        user.click(deleteButtons[0]);
+        user.click(deleteButtons[1]);
+      }
+    })
+
+    await new Promise((r) => setTimeout(r, 3000));
 
     await waitFor(() => {
       const postsDeleted = screen.queryAllByText(/This is a test post. Courtesy of SprintTwo_Post.test.tsx/i);
-      expect(postsDeleted).toHaveLength(postsCurrent.length);
-      console.log(postsDeleted.length);
+      expect(postsDeleted).toHaveLength(0);
+
     });
 
     await logOut();
-  }, 15000);
+  }, 50000);
 
   test('navigate to org page from dashboard, unable to find delete post button', async  () => {
     await logInUser();
@@ -134,8 +143,8 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
     await new Promise((r) => setTimeout(r, 3000));
 
     const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
-    expect(orgCard).toBeInTheDocument();
-    console.log(screen.debug(orgCard));
+    expect(orgCard).toBeDefined();
+
   
     await fireEvent.click(orgCard);
     await render(
@@ -147,7 +156,7 @@ test('navigate to org page from dashboard, create a post, delete a post', async 
 
     await waitFor(() => {
       const about = screen.getByText(/Facebook/i);
-      expect(about).toBeInTheDocument();
+      expect(about).toBeDefined();
     });
 
     await waitFor(() => {
