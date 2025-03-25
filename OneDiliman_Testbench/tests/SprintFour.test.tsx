@@ -5,7 +5,7 @@ import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
-import { expect, test} from 'vitest'
+import { assert, expect, test} from 'vitest'
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
@@ -150,6 +150,14 @@ test('as user, check for application button on org page', async  () => {
     await expect(notificationButton).toBeDefined();
     await fireEvent.click(notificationButton)
     const notificationMessageBeforeDelete = await screen.findAllByTestId("notification-message");
+    for(let i = 0; i < notificationMessageBeforeDelete.length; i++){
+      if (notificationMessageBeforeDelete[i].textContent == "New Post from New New Org: I really love dogs!"){
+        break;
+      }
+      if (i == notificationMessageBeforeDelete.length - 1){
+        assert.fail('error message on failure');
+      }
+    }
     await expect(notificationMessageBeforeDelete[0].textContent).toBe("New Post from New New Org: I really love dogs!")
     //delete notification
     const deleteNotificationButton = await screen.findAllByTestId("delete-notification");

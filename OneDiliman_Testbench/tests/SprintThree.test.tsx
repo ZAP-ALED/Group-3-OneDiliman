@@ -350,6 +350,7 @@ test('as a user, follow and unfollow an org', async () => {
     expect(followButton).toBeInTheDocument();
     userEvent.click(followButton);
 
+    await new Promise((r) => setTimeout(r, 2000));
     const postUnfollowButton = await screen.getByTestId("unfollow-button");
     expect(postUnfollowButton).toBeInTheDocument();
   }
