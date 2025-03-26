@@ -122,13 +122,13 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     orgId: orgId,
                     orgLogo: formData.orgLogo || "",
                     orgName: formData.orgName,
-                    orgAcronym: formData.orgAcronym || "No acryonym",
+                    orgAcronym: formData.orgAcronym || "",
                     //orgPictures: formData.orgPictures !== "" ? formData.orgPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],
                     orgPictures: formData.orgPictures || ["https://imgur.com/E6u04LW"],
                     orgBio: formData.orgBio || "No bio",
                     // orgTags: formData.orgTags !== "" ? formData.orgTags.split(",").toString().split(",") : [],
                     //orgTags: formData.orgTags !== "" ? formData.orgTags.toString().split(",").toString().split(",") : [],
-                    orgTags: formData.orgTags || ["Tag1: Will be expanded on", "Tag2: in a future sprint"],
+                    orgTags: formData.orgTags || "",
 
 
                     dateFounded: formData.dateFounded || "2025",
@@ -145,7 +145,7 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     members: {},
                     applicants: {},
                     aspiringApplicants: {},
-                    isVerified: false,
+                    isVerified: true,
                     followerCount: 0,
                     followers: [],
 

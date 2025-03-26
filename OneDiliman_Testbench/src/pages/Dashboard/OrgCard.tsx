@@ -36,6 +36,7 @@ export default function OrgCard({ org, toggleStarred }) {
   const orgBio = org.orgBio.substring(0, 200); // Limit bio to 200 characters
   const orgPicture = org.orgPictures[0] + ".jpg";
   const orgTags = org.orgTags;
+  const orgAcro = org.orgAcronym === "" ? "" : `(${org.orgAcronym})`;
 
   return (
     <div className="h-100">
@@ -60,7 +61,7 @@ export default function OrgCard({ org, toggleStarred }) {
         <Link to={`/dashboard/${orgId}`} className='card-link' data-testid={`org-card-${orgId}`}>
           <img src={orgPicture} className="org-img" alt="..." />
           <div className="card-body" style={{ height: '180px', overflow: 'hidden' }}> {/* Limit card body height */}
-            <h5 className="card-title">{orgName} ({org.orgAcronym})</h5>
+            <h5 className="card-title">{orgName} {orgAcro}</h5>
             <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{orgBio}</p> {/* Apply ellipsis to overflowed text */}
           </div>
           <div className="card-footer" style={{ height: '75px', overflow: 'hidden' }}> {/* Limit footer height */}
