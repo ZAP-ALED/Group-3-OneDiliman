@@ -330,3 +330,23 @@
 .posts-list .post-card:hover {
   transform: translateY(-2px);
 }
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-about-button {
+  margin-left: auto; 
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000000; 
+  font-size: 1.4rem; 
+  padding: 0.5rem; 
+}
+
+.edit-about-button:hover {
+  color: #f74717; 
+}

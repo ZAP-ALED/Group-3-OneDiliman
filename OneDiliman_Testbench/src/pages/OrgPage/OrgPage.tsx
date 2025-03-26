@@ -62,6 +62,7 @@ export default function OrgPage() {
   const [error, setError] = useState("");
   const [currentUserEmail, setCurrentUserEmail] = useState("");
 
+  const [isEditingAbout, setIsEditingAbout] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editableData, setEditableData] = useState<EditableOrgData>({
     orgDescription: '',
@@ -647,7 +648,44 @@ export default function OrgPage() {
     });
   };
 
+  const HandleEditAbout = async () => {
+    if (!orgData || !params.orgId) {
+      alert('Organization data is not available.');
+      return;
+    }
+
+    try {
+      const orgDocRef = doc(db, 'organizations', params.orgId);
+      await updateDoc(orgDocRef, {
+        orgDescription: editableData.orgDescription,
+      });
+      alert('About Us updated successfully!');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      alert('Failed to update organization: ' + (error as Error).message);
+    }
+};
+
   const handleUpdateOrgInfo = async () => {
+    if (!orgData || !params.orgId) {
+      alert('Organization data is not available.');
+      return;
+    }
+
+    try {
+      const orgDocRef = doc(db, 'organizations', params.orgId);
+      await updateDoc(orgDocRef, {
+        orgBio: editableData.orgBio,
+        orgWebsite: editableData.orgWebsite,
+        orgFacebook: editableData.orgFacebook,
+      });
+      alert('Org Details updated successfully!');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      alert('Failed to update organization: ' + (error as Error).message);
+    }
   };
 
   const handleCreateEvent = async () => {
@@ -830,20 +868,6 @@ export default function OrgPage() {
                         )}
                       </div>
                 </div>
-                
-                
-                {isUserAnOrgAdmin && (
-                  <div className="org-actions">
-                    <button 
-                      className="btn btn-outline-primary"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      <FontAwesomeIcon icon={faPen} className="me-2" />
-                      Edit Organization
-                    </button>
-                  </div>
-                )}
-                
               </div>
   
               {orgData?.orgTags && (
@@ -877,13 +901,13 @@ export default function OrgPage() {
                 {isEditing ? (
                   <div className="edit-form">
                     <div className="mb-3">
-                      <label className="form-label">Description</label>
+                      <label className="form-label">Bio</label>
                       <textarea
                         className="form-control"
-                        value={editableData.orgDescription}
+                        value={editableData.orgBio}
                         onChange={(e) => setEditableData({
                           ...editableData,
-                          orgDescription: e.target.value
+                          orgBio: e.target.value
                         })}
                         rows={4}
                       />
@@ -949,15 +973,26 @@ export default function OrgPage() {
                     <div className="info-item">
                       <FontAwesomeIcon icon={faGlobe} className="icon" />
                       <a href={orgData?.orgWebsite} target="_blank" rel="noopener noreferrer">
-                        Website
+                      {editableData.orgWebsite}
                       </a>
                     </div>
                     <div className="info-item">
                       <FontAwesomeIcon icon={faFacebook} className="icon" />
                       <a href={orgData?.orgFacebook} target="_blank" rel="noopener noreferrer">
-                        Facebook
+                      {editableData.orgFacebook}
                       </a>
                     </div>
+                    {isUserAnOrgAdmin && (
+                      <div className="org-actions">
+                        <button 
+                          className="btn btn-outline-primary"
+                          onClick={() => setIsEditing(true)}
+                        >
+                          <FontAwesomeIcon icon={faPen} className="me-2" />
+                          Edit Details
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -975,8 +1010,50 @@ export default function OrgPage() {
                 >
                   <Tab eventKey="about" title="About">
                     <div className="p-4">
-                      <h4>About the Organization</h4>
-                      <p>{orgData?.orgDescription}</p>
+                      <h4 className="about-header">
+                        About the Organization
+                        {isUserAnOrgAdmin && !isEditingAbout && (
+                          <button
+                            className="action-button edit-about-button"
+                            onClick={() => setIsEditingAbout(true)} // Enter edit mode
+                            data-testid="edit-post-button"
+                          >
+                            <FontAwesomeIcon icon={faPen} />
+                          </button>
+                        )}
+                      </h4>
+
+                      {isEditingAbout ? (
+                        <div>
+                          <textarea
+                            className="form-control"
+                            value={editableData.orgDescription}
+                            onChange={(e) =>
+                              setEditableData({ ...editableData, orgDescription: e.target.value })
+                            }
+                            rows={4}
+                          />
+                          <div className="mt-2">
+                            <button
+                              className="btn btn-primary me-2"
+                              onClick={() => {
+                                HandleEditAbout();
+                                setIsEditingAbout(false); // Exit edit mode after saving
+                              }}
+                            >
+                              Save
+                            </button>
+                            <button
+                              className="btn btn-secondary"
+                              onClick={() => setIsEditingAbout(false)} // Exit edit mode without saving
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p>{orgData?.orgDescription}</p>
+                      )}
                     </div>
                   </Tab>
                   <Tab eventKey="posts" title="Posts" data-testid="posts-tab">
