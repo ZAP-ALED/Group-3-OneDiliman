@@ -221,6 +221,19 @@ export default function NotificationButton() {
         <Dropdown.Menu className="notification-dropdown-menu">
           <div className="notification-header">
             <h6 className="m-0">Notifications</h6>
+            {notifications.length > 0 && (
+              <button 
+                className="delete-all-notifications-btn" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  notifications.forEach((notif) => handleDeleteNotification(notif.id, e));
+                }}
+              >
+                Clear All
+              </button>
+            )}
+
+
             {getUnreadCount() > 0 && (
               <button 
                 className="mark-all-read-btn" 
