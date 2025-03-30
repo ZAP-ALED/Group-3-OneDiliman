@@ -767,9 +767,9 @@ export async function updateApplicationFormUrl(orgId: string, formUrl: string): 
 export const addNotification = async (userId: string, message: string, orgId: string, postId: string) => {
   const db = getFirestore();
   await addDoc(collection(db, 'notifications'), {
-    userId,
+    userId, // Who shall receive the notif?
     message,
-    orgId,
+    orgId, // Who does the thing?
     postId,
     timestamp: serverTimestamp(),
     read: false,
