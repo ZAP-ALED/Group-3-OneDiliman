@@ -499,7 +499,7 @@ export default function OrgPage() {
   //   };
   // }, [params.orgId]);
 
-  const handleFollow = async () => {
+const handleFollow = async () => {
     try {
       await followOrganization(uid, params.orgId!);
       setIsFollowing(true); // Update the UI state
@@ -508,6 +508,14 @@ export default function OrgPage() {
         ...prev!,
         followerCount: (prev?.followerCount || 0) + 1,
       }));
+
+      // Fetch the user's first name
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      const firstName = userDoc.data()?.firstName || 'Someone';
+      const lastName = userDoc.data()?.lastName || '';
+
+      // Send notification to the organization
+      await addNotification(params.orgId!, `${firstName} ${lastName} started following your organization!`, params.orgId!, '');
     } catch (error) {
       console.error('Error following organization:', error);
     }
