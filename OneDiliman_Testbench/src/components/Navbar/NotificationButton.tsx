@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Dropdown from "react-bootstrap/Dropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBell } from "@fortawesome/free-regular-svg-icons";
-import { faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import {
   collection,
   getFirestore,
@@ -41,24 +41,38 @@ export default function NotificationButton() {
   const [userId, setUserId] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState<NotificationData | null>(null);
+  const [isOrganization, setIsOrganization] = useState(false);
+
   
   const navigate = useNavigate();
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
+        
+        try {
+          const orgDoc = await getDoc(doc(db, "organizations", user.uid));
+          setIsOrganization(orgDoc.exists());
+        } catch (error) {
+          console.error("Error checking if user is organization:", error);
+          setIsOrganization(false);
+        }
       } else {
         setUserId(null);
         setNotifications([]);
         setIsLoading(false);
+        setIsOrganization(false);
       }
     });
 
     return () => unsubscribeAuth();
-  }, [auth]);
+    console.log(user.uid);
+  }, [auth, db]);
+
+
 
   useEffect(() => {
     if (!userId) {
@@ -116,6 +130,13 @@ export default function NotificationButton() {
 
   const handleNotificationClick = async (notification: NotificationData, event: React.MouseEvent) => {
     event.stopPropagation();
+
+    if (isOrganization) {
+      await updateDoc(doc(db, "notifications", notification.id), {
+        read: true
+      });
+      return; 
+    }
     
     console.log("Notification clicked:", notification);
     
@@ -223,7 +244,7 @@ export default function NotificationButton() {
             <h6 className="m-0">Notifications</h6>
             {notifications.length > 0 && (
               <button 
-                className="delete-all-notifications-btn" 
+                className="mark-all-read-btn" 
                 onClick={(e) => {
                   e.stopPropagation();
                   notifications.forEach((notif) => handleDeleteNotification(notif.id, e));
@@ -266,13 +287,14 @@ export default function NotificationButton() {
                     </div>
                   </div>
                 <div>
-                  <button
-                    className="delete-notification-btn"
-                    onClick={(e) => handleDeleteNotification(notif.id, e)}
-                    data-testid="delete-notification"
-                  >
-                    <FontAwesomeIcon icon={faTrashAlt} />
-                  </button>
+                    <button
+                      className="delete-notification-btn"
+                      onClick={(e) => handleDeleteNotification(notif.id, e)}
+                      data-testid="delete-notification"
+                      aria-label="Delete notification"
+                    >
+                      <FontAwesomeIcon icon={faTrash} className="delete-icon" />
+                    </button>
                 </div>
 
                 </div>
