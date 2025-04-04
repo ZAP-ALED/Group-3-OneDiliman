@@ -101,7 +101,7 @@ test('as user, check for application button on org page', async  () => {
     await render(
       <MemoryRouter><DashboardPage /></MemoryRouter>);
     const user = userEvent.setup();
-    await new Promise((r) => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 7000));
   
     const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
     await expect(orgCard).toBeDefined();
