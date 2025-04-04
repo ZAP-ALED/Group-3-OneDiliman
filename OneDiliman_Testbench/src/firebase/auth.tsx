@@ -3,6 +3,20 @@
 import { createUserWithEmailAndPassword, signInAnonymously, signInWithEmailAndPassword, sendEmailVerification, getAuth, updateProfile } from "firebase/auth";
 import { app, auth } from "../FirebaseConfig";
 import { addDoc, collection, doc, getFirestore, setDoc, updateDoc, getDoc, increment, arrayUnion, arrayRemove } from "firebase/firestore";
+import { addNotification } from "../components/FirebaseConnection";
+
+
+const getCurrentUserId = () => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  if (user) {
+    return user.uid; // Returns the current user's ID
+  } else {
+    console.error("No user is currently signed in.");
+    return null; // No user is signed in
+  }
+};
 
 // adding custom data in profile: https://www.youtube.com/watch?v=qWy9ylc3f9U
 export const doCreateUserWithEmailAndPassword = async (formData: any) => {
@@ -122,13 +136,13 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     orgId: orgId,
                     orgLogo: formData.orgLogo || "",
                     orgName: formData.orgName,
-                    orgAcronym: formData.orgAcronym || "",
+                    orgAcronym: formData.orgAcronym || "No acryonym",
                     //orgPictures: formData.orgPictures !== "" ? formData.orgPictures.toString().split(",") : ["https://imgur.com/E6u04LW"],
                     orgPictures: formData.orgPictures || ["https://imgur.com/E6u04LW"],
                     orgBio: formData.orgBio || "No bio",
                     // orgTags: formData.orgTags !== "" ? formData.orgTags.split(",").toString().split(",") : [],
                     //orgTags: formData.orgTags !== "" ? formData.orgTags.toString().split(",").toString().split(",") : [],
-                    orgTags: formData.orgTags || "",
+                    orgTags: formData.orgTags || ["Tag1: Will be expanded on", "Tag2: in a future sprint"],
 
 
                     dateFounded: formData.dateFounded || "2025",
@@ -145,7 +159,7 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                     members: {},
                     applicants: {},
                     aspiringApplicants: {},
-                    isVerified: true,
+                    isVerified: false,
                     followerCount: 0,
                     followers: [],
 
@@ -310,15 +324,44 @@ export const followOrganization = async (userId: string, orgId: string) => {
       // Add user ID to the post's usersLiked array and increment like count
       await updateDoc(postRef, {
         usersLiked: arrayUnion(userId),
-        postLikes: increment(1)
+        postLikes: increment(1),
       });
   
       // Add post ID to the user's likedPosts array
       await updateDoc(userRef, {
-        likedPosts: arrayUnion(postId)
+        likedPosts: arrayUnion(postId),
       });
   
-      console.log('User successfully liked the post!');
+      // Fetch the post data to get the post owner and title
+      const postDoc = await getDoc(postRef);
+      const postData = postDoc.data();
+      if (!postData) {
+        console.error('Post document does not exist');
+        return;
+      }
+  
+      const postOwnerId = postData.postOwner;
+  
+      // Fetch the user's first and last name
+      const userDoc = await getDoc(userRef);
+      const userData = userDoc.data();
+      if (!userData) {
+        console.error('User document does not exist');
+        return;
+      }
+  
+      const firstName = userData.firstName || 'Someone';
+      const lastName = userData.lastName || '';
+  
+      // Send notification to the post owner
+      await addNotification(
+        postOwnerId,
+        `${firstName} ${lastName} liked your post: ${postData.postTitle}`,
+        userId,
+        postId
+      );
+  
+      console.log('User successfully liked the post and notification sent!');
     } catch (error) {
       console.error('Error liking post:', error);
     }
@@ -354,7 +397,28 @@ export const followOrganization = async (userId: string, orgId: string) => {
   
       if (userDoc.exists()) {
         const userData = userDoc.data();
+
+        // Send notification to the post owner
+        const postRef = doc(db, 'posts', postId);
+        const postDoc = await getDoc(postRef);
+        if (postDoc.exists()) {
+          const postData = postDoc.data();
+          const postOwnerId = postData.postOwner;
+          const notificationRef = doc(collection(db, 'notifications'));
+          // await addDoc(notificationRef, {
+          //   userId: postOwnerId,
+          //   timestamp: new Date(),
+          //   read: false,
+          //   postId: postId,
+          //   type: 'like',
+          //   message: `${userId} liked your post: ${postData.postTitle}`,
+          // });
+        } else {
+          console.error('Post document does not exist');
+        }
+
         return userData.likedPosts && userData.likedPosts.includes(postId);
+
       } else {
         console.error('User document does not exist');
         return false;

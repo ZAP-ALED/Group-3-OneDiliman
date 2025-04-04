@@ -59,10 +59,11 @@
   }
   
   .notification-item {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    cursor: pointer;
-    transition: background-color 0.2s;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
   }
   
   .notification-item:hover {
@@ -85,9 +86,8 @@
   }
   
   .notification-content {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    flex: 1;
+    margin-right: 8px;
   }
   
   .notification-message {
@@ -112,4 +112,26 @@
     text-align: center;
     color: #6c757d;
     font-style: italic;
+  }
+
+  .delete-notification-btn {
+    background: none;
+    border: none;
+    color: #6c757d;
+    padding: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .delete-notification-btn:hover {
+    opacity: 1;
+    color: #dc3545;
+  }
+  
+  .delete-icon {
+    font-size: 0.85rem;
   }

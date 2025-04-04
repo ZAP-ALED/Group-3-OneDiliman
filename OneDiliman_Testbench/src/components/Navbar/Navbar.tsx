@@ -228,12 +228,18 @@ function DisplayLink({ currentPage }) {
           </Dropdown.Toggle>
         
           <Dropdown.Menu className="aligned-dropdown-menu">
-          <Dropdown.Item onClick={handleOpenProfileModal}> 
-                <FontAwesomeIcon icon={faUser} /> <span style={{ marginLeft: '5px' }}> Profile </span></Dropdown.Item>
-            <Dropdown.Item onClick={handleOpenFAQModal}> 
-                <FontAwesomeIcon icon={faCircleQuestion} /> <span style={{ marginLeft: '5px' }}> FAQ </span></Dropdown.Item>
-            <Dropdown.Item  onClick={handleLogOut} data-testid="logout-button">
-                <FontAwesomeIcon icon={faArrowRightFromBracket} /> <span style={{ marginLeft: '5px' }}> Logout </span></Dropdown.Item>
+            {/* Conditionally render the Profile option */}
+            {role !== "Org Admin" && (
+              <Dropdown.Item onClick={handleOpenProfileModal}>
+                <FontAwesomeIcon icon={faUser} /> <span style={{ marginLeft: '5px' }}> Profile </span>
+              </Dropdown.Item>
+            )}
+            {/* <Dropdown.Item onClick={handleOpenFAQModal}>
+              <FontAwesomeIcon icon={faCircleQuestion} /> <span style={{ marginLeft: '5px' }}> FAQ </span>
+            </Dropdown.Item> */}
+            <Dropdown.Item onClick={handleLogOut} data-testid="logout-button">
+              <FontAwesomeIcon icon={faArrowRightFromBracket} /> <span style={{ marginLeft: '5px' }}> Logout </span>
+            </Dropdown.Item>
           </Dropdown.Menu>
           </Dropdown>
           </form>

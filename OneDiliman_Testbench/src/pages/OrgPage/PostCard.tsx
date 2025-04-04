@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faPen, 
   faTrash,
+  faThumbsUp
 } from '@fortawesome/free-solid-svg-icons';
 import Modal from 'react-bootstrap/Modal';
 import './PostCard.css';
@@ -144,67 +145,69 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
         </div>
 
         <div className="bottom-meta">
-          <div className="post-tags">
-            {post.postTags.map((tag, index) => (
-              <span key={index} className="type-badge">{tag}</span>
-            ))}
+          <div className="control-left">
+            {post.postTags && post.postTags.length > 0 && (
+              <div className="post-tags">
+                {post.postTags.map((tag, index) => (
+                  <span key={index} className="type-badge">{tag}</span>
+                ))}
+              </div>
+            )}
+            
+            {isUserAnOrgAdmin && (
+              <div className="action-buttons">
+                <button
+                  className="action-button"
+                  onClick={(e) => handleButtonClick(e, () => onEdit(post))}
+                  data-testid="edit-post-button"
+                >
+                  <FontAwesomeIcon icon={faPen} />
+                </button>
+                <button
+                  className="action-button delete"
+                  onClick={(e) => handleButtonClick(e, () => onDelete(post.id))}
+                  data-testid="delete-post-button"
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              </div>
+            )}
           </div>
-        
 
-        {/* Like Button */}
+          <div className="control-right">
+            
+            {/* Like Button */}
+            {isStudentUser ? (
+              // Student view: Like button + like count
+              <div className="like-section d-flex align-items-center gap-2">
+                <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
+                <button
+                  className={`btn btn-sm ${liked ? 'btn-danger' : 'btn-outline-primary'}`}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (!user) return;
 
-        {isStudentUser ? (
-          // Student view: Like button + like count
-          <div className="like-section d-flex align-items-center gap-2">
-            <button
-              className={`btn btn-sm ${liked ? 'btn-danger' : 'btn-outline-primary'}`}
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (!user) return;
-
-                if (liked) {
-                  await unlikePost(user.uid, post.id);
-                  setLiked(false);
-                  setLikeCount(prev => prev - 1);
-                } else {
-                  await likePost(user.uid, post.id);
-                  setLiked(true);
-                  setLikeCount(prev => prev + 1);
-                }
-              }}
-            >
-              {liked ? 'Unlike' : 'Like'}
-            </button>
-            <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
+                    if (liked) {
+                      await unlikePost(user.uid, post.id);
+                      setLiked(false);
+                      setLikeCount(prev => prev - 1);
+                    } else {
+                      await likePost(user.uid, post.id);
+                      setLiked(true);
+                      setLikeCount(prev => prev + 1);
+                    }
+                  }}
+                >
+                  <FontAwesomeIcon icon={faThumbsUp} />
+                </button>
+              </div>
+            ) : (
+              // Non-student view: just the count
+              <div className="like-section d-flex align-items-center gap-2">
+                <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
+              </div>
+            )}
           </div>
-        ) : (
-          // Non-student view: just the count
-          <div className="like-section d-flex align-items-center gap-2">
-            <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
-          </div>
-        )}
-
-
-
-
-          {isUserAnOrgAdmin && (
-            <div className="action-buttons">
-              <button
-                className="action-button"
-                onClick={(e) => handleButtonClick(e, () => onEdit(post))}
-                data-testid="edit-post-button"
-              >
-                <FontAwesomeIcon icon={faPen} />
-              </button>
-              <button
-                className="action-button delete"
-                onClick={(e) => handleButtonClick(e, () => onDelete(post.id))}
-                data-testid="delete-post-button"
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
-            </div>
-          )}
         </div>
       </div>
     
