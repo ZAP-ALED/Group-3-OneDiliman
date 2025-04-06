@@ -42,9 +42,6 @@ function DisplayLink({ currentPage }) {
   const [editableCourse, setEditableCourse] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   
-  // Additional fields from signup
-  const [middleName, setMiddleName] = useState("");
-  
   // Define college and course options
   const collegeCourses = {
     "College of Architecture": [
@@ -212,9 +209,6 @@ function DisplayLink({ currentPage }) {
               setEmail(userData.email)
               setEditableCollege(userData.college || "")
               setEditableCourse(userData.course || "")
-              
-              // Set additional fields
-              setMiddleName(userData.middleName || "")
             }
           });
           getDoc(doc(db, "organizations", uid)).then(docSnap => {
