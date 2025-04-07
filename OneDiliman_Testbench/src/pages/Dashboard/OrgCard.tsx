@@ -62,7 +62,7 @@ export default function OrgCard({ org, toggleStarred }) {
           <img src={orgBanner} className="org-img" alt="..." />
           <div className="card-body" style={{ height: '180px', overflow: 'hidden' }}> {/* Limit card body height */}
             <h5 className="card-title">{orgName} {orgAcro}</h5>
-            <p className="card-text" style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{orgBio}</p> {/* Apply ellipsis to overflowed text */}
+            <p className="card-text" data-testid={`org-bio-${orgId}`} style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{orgBio}</p> {/* Apply ellipsis to overflowed text */}
           </div>
           <div className="card-footer" style={{ height: '75px', overflow: 'hidden' }}> {/* Limit footer height */}
             {orgTags.map((tag, index) => {

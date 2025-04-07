@@ -913,6 +913,7 @@ const handleFollow = async () => {
                       <textarea
                         className="form-control"
                         value={editableData.orgBio}
+                        data-testid="edit-org-bio"
                         onChange={(e) => setEditableData({
                           ...editableData,
                           orgBio: e.target.value
@@ -937,6 +938,7 @@ const handleFollow = async () => {
                       <input
                         type="url"
                         className="form-control"
+                        data-testid="edit-org-website"
                         value={editableData.orgWebsite}
                         onChange={(e) => setEditableData({
                           ...editableData,
@@ -949,6 +951,7 @@ const handleFollow = async () => {
                       <input
                         type="url"
                         className="form-control"
+                        data-testid="edit-org-facebook"
                         value={editableData.orgFacebook}
                         onChange={(e) => setEditableData({
                           ...editableData,
@@ -959,6 +962,7 @@ const handleFollow = async () => {
                     <div className="mt-3">
                       <button 
                         className="btn btn-primary me-2"
+                        data-testid="save-changes-edit-org"
                         onClick={handleUpdateOrgInfo}
                       >
                         Save Changes
@@ -980,13 +984,13 @@ const handleFollow = async () => {
                     </div>
                     <div className="info-item">
                       <FontAwesomeIcon icon={faGlobe} className="icon" />
-                      <a href={orgData?.orgWebsite} target="_blank" rel="noopener noreferrer">
+                      <a href={orgData?.orgWebsite} data-testid="org-website" target="_blank" rel="noopener noreferrer">
                       {editableData.orgWebsite}
                       </a>
                     </div>
                     <div className="info-item">
                       <FontAwesomeIcon icon={faFacebook} className="icon" />
-                      <a href={orgData?.orgFacebook} target="_blank" rel="noopener noreferrer">
+                      <a href={orgData?.orgFacebook} data-testid="org-facebook" target="_blank" rel="noopener noreferrer">
                       {editableData.orgFacebook}
                       </a>
                     </div>
@@ -994,6 +998,7 @@ const handleFollow = async () => {
                       <div className="org-actions">
                         <button 
                           className="btn btn-outline-primary"
+                          data-testid="edit-org-details"
                           onClick={() => setIsEditing(true)}
                         >
                           <FontAwesomeIcon icon={faPen} className="me-2" />
