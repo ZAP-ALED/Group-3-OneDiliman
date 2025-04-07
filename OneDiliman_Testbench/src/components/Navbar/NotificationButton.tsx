@@ -245,6 +245,7 @@ export default function NotificationButton() {
             {notifications.length > 0 && (
               <button 
                 className="mark-all-read-btn" 
+                data-testid="clear-all-notifs"
                 onClick={(e) => {
                   e.stopPropagation();
                   notifications.forEach((notif) => handleDeleteNotification(notif.id, e));
