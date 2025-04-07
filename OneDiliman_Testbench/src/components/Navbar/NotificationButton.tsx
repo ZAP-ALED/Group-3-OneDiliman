@@ -14,7 +14,7 @@ import {
   doc,
   updateDoc,
   Timestamp,
-  getDocs,
+  getDoc,
   limit,
   deleteDoc,
   writeBatch
@@ -47,6 +47,25 @@ export default function NotificationButton() {
   const navigate = useNavigate();
   const auth = getAuth(app);
   const db = getFirestore(app);
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+        console.log("sdfsdfsdfsdfds",user.uid)
+        
+        const orgDoc = await getDoc(doc(db, "organizations", user.uid));
+        setIsOrganization(orgDoc.exists());
+      } else {
+        setUserId(null);
+        setNotifications([]);
+        setIsLoading(false);
+        setIsOrganization(false);
+      }
+    });
+  
+    return () => unsubscribeAuth();
+  }, [auth, db]);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
@@ -131,18 +150,20 @@ export default function NotificationButton() {
   const handleNotificationClick = async (notification: NotificationData, event: React.MouseEvent) => {
     event.stopPropagation();
 
-    if (isOrganization) {
-      await updateDoc(doc(db, "notifications", notification.id), {
-        read: true
-      });
-      return; 
-    }
     
     console.log("Notification clicked:", notification);
+    console.log(isOrganization);
     
     await updateDoc(doc(db, "notifications", notification.id), {
     read: true
     });
+
+    if (isOrganization) {
+      // await updateDoc(doc(db, "notifications", notification.id), {
+      //   read: true
+      // });
+      return; 
+    }
 
     // console.log("Notification properties:", Object.keys(notification));
     // console.log("Notification values:", {
