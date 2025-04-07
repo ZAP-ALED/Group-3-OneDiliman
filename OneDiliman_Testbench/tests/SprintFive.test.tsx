@@ -46,28 +46,30 @@ async function logOut() {
   await user.click(screen.getByTestId("logout-button"));
 }
 
+async function renderOrgPage() {
+  await render(
+    <MemoryRouter><DashboardPage /></MemoryRouter>);
+  await new Promise((r) => setTimeout(r, 7000));
+
+  const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+  await expect(orgCard).toBeDefined();
+
+  await userEvent.click(orgCard);
+
+  await render(
+      <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+          <Routes>
+              <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+          </Routes>
+      </MemoryRouter>
+  );
+  await new Promise((r) => setTimeout(r, 5000));
+}
 test('create post, check for notifs, delete all, check for empty notifs', async () => {
 await logInOrg();
     cleanup();
   
-    await render(
-      <MemoryRouter><DashboardPage /></MemoryRouter>);
-    const user = userEvent.setup();
-    await new Promise((r) => setTimeout(r, 7000));
-  
-    const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
-    await expect(orgCard).toBeDefined();
-
-    await userEvent.click(orgCard);
-
-    await render(
-        <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
-            <Routes>
-                <Route path="/dashboard/:orgId" element ={<OrgPage />} />
-            </Routes>
-        </MemoryRouter>
-    );
-    await new Promise((r) => setTimeout(r, 5000));
+    await renderOrgPage();
     
     //click post tab
     const postsTab = await screen.findByTestId("posts-tab");
@@ -148,24 +150,7 @@ await logInOrg();
 
     const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
   
-    await render(
-      <MemoryRouter><DashboardPage /></MemoryRouter>);
-    await new Promise((r) => setTimeout(r, 7000));
-  
-    const orgCardTwo = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
-    await expect(orgCardTwo).toBeDefined();
-
-    await userEvent.click(orgCardTwo);
-
-    await render(
-        <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
-            <Routes>
-                <Route path="/dashboard/:orgId" element ={<OrgPage />} />
-            </Routes>
-        </MemoryRouter>
-    );
-    await new Promise((r) => setTimeout(r, 5000));
-
+    await renderOrgPage();
     //click post tab
     const postsTabTwo = await screen.findByTestId("posts-tab");
     await expect(postsTabTwo).toBeDefined();
@@ -198,6 +183,101 @@ await logInOrg();
 }, 100000);
 
 test('edit org details, see if user sees changes', async () => {
+    const spyAlert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    await logInOrg();
+    await cleanup();
 
-}, 50000)
+
+    const user = userEvent.setup();
+    await renderOrgPage()
+
+    const editOrgDetails = await screen.findByTestId("edit-org-details")
+    await expect(editOrgDetails).toBeDefined();
+    await user.click(editOrgDetails);
+
+    const editOrgBioOne = await screen.findByTestId("edit-org-bio");
+    const editOrgWebsiteOne = await screen.findByTestId("edit-org-website");
+    const editOrgFacebookOne = await screen.findByTestId("edit-org-facebook");
+    const saveEditOrgChangesOne = await screen.findByTestId("save-changes-edit-org");
+
+    const origOrgBio = 'hello this is d bio';
+    const origOrgWebsite = 'https://up.edu.ph';
+    const origOrgFacebook = 'https://www.facebook.com/OfficialUPDiliman';
+
+    await fireEvent.change(editOrgBioOne, {target: {value: "test change"}});
+    await fireEvent.change(editOrgWebsiteOne, {target: {value: "test change"}});
+    await fireEvent.change(editOrgFacebookOne, {target: {value: "test change"}});
+    await user.click(saveEditOrgChangesOne);
+
+    await waitFor(() => {
+      expect(spyAlert).toHaveBeenCalledWith('Org Details updated successfully!')
+    });
+
+    await new Promise((r) => setTimeout(r, 3000))
+
+    await logOut();
+    await cleanup();
+    await logInUser();
+    await cleanup();
+
+    await render(
+      <MemoryRouter><DashboardPage /></MemoryRouter>);
+    await new Promise((r) => setTimeout(r, 5000));
+    const orgBioCheck = await screen.findByTestId("org-bio-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+    await expect(orgBioCheck.textContent).toBe("test change");
+
+    await cleanup();
+    await renderOrgPage();
+
+    const orgWebsiteCheck = await screen.findByTestId("org-website");
+    const orgFacebookCheck = await screen.findByTestId("org-facebook");
+    await expect(orgWebsiteCheck.textContent).toBe("test change");
+    await expect(orgFacebookCheck.textContent).toBe("test change");
+
+    await logOut();
+    await cleanup();
+    await logInOrg();
+    await cleanup();
+
+    await renderOrgPage();
+
+    const editOrgDetailsTwo = await screen.findByTestId("edit-org-details")
+    await expect(editOrgDetailsTwo).toBeDefined();
+    await user.click(editOrgDetailsTwo);
+
+    const editOrgBioTwo = await screen.findByTestId("edit-org-bio");
+    const editOrgWebsiteTwo = await screen.findByTestId("edit-org-website");
+    const editOrgFacebookTwo = await screen.findByTestId("edit-org-facebook");
+    const saveEditOrgChangesTwo = await screen.findByTestId("save-changes-edit-org");
+
+    await fireEvent.change(editOrgBioTwo, {target: {value: origOrgBio}});
+    await fireEvent.change(editOrgWebsiteTwo, {target: {value: origOrgWebsite}});
+    await fireEvent.change(editOrgFacebookTwo, {target: {value: origOrgFacebook}});
+    await user.click(saveEditOrgChangesTwo);
+
+    await waitFor(() => {
+      expect(spyAlert).toHaveBeenCalledWith('Org Details updated successfully!')
+    });
+
+    await spyAlert.mockRestore();
+
+    await new Promise((r) => setTimeout(r, 3000))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    await spyAlert.mockRestore();
+    
+}, 100000)
 
