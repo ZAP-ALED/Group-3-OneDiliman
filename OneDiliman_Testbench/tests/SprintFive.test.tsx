@@ -5,7 +5,7 @@ import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
-import { assert, expect, test} from 'vitest'
+import { vi, expect, test} from 'vitest'
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
@@ -142,7 +142,60 @@ await logInOrg();
     const notificationMessageAfterDelete = await screen.queryAllByTestId("notification-message");
     await expect(notificationMessageAfterDelete.length).toBe(0)
     await logOut();
-}, 50000);
+      // delete the test posts
+    await logInOrg();
+    cleanup();
+
+    const spyConfirm = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+  
+    await render(
+      <MemoryRouter><DashboardPage /></MemoryRouter>);
+    await new Promise((r) => setTimeout(r, 7000));
+  
+    const orgCardTwo = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
+    await expect(orgCardTwo).toBeDefined();
+
+    await userEvent.click(orgCardTwo);
+
+    await render(
+        <MemoryRouter initialEntries={['/dashboard/jO8BwsPe1lSCAo1gIRa6oR8vGpH3']}>
+            <Routes>
+                <Route path="/dashboard/:orgId" element ={<OrgPage />} />
+            </Routes>
+        </MemoryRouter>
+    );
+    await new Promise((r) => setTimeout(r, 5000));
+
+    //click post tab
+    const postsTabTwo = await screen.findByTestId("posts-tab");
+    await expect(postsTabTwo).toBeDefined();
+    await fireEvent.click(postsTabTwo);
+
+    const deletePostButtonsOne = await screen.findAllByTestId("delete-post-button");
+    await expect(deletePostButtonsOne).toBeDefined();
+    await fireEvent.click(deletePostButtonsOne[0]);
+    await waitFor(() => {
+        expect(spyConfirm).toHaveBeenCalledWith('Are you sure you want to delete this post?');
+      });
+    
+    //spyConfirm.mockRestore();
+
+    await new Promise((r) => setTimeout(r, 3000))
+
+    const deletePostButtonsTwo = await screen.findAllByTestId("delete-post-button");
+    await expect(deletePostButtonsTwo).toBeDefined();
+    await fireEvent.click(deletePostButtonsTwo[0]);
+
+    await waitFor(() => {
+      expect(spyConfirm).toHaveBeenCalledWith('Are you sure you want to delete this post?');
+    });
+  
+    await spyConfirm.mockRestore();
+
+    await new Promise((r) => setTimeout(r, 3000))
+
+
+}, 100000);
 
 test('edit org details, see if user sees changes', async () => {
 
