@@ -277,6 +277,10 @@ test('check for profile popup', async () => {
   await render(<MemoryRouter><DashboardPage /></MemoryRouter>);
   await timeout(3000);
 //user-profile-pop-up, profile-pop-up-button
+  const profileDropdown = await screen.findByTestId("profile-dropdown");
+  await expect(profileDropdown).toBeDefined();
+  await userEvent.click(profileDropdown);
+
   const profilePopUpButton = await screen.findByTestId("profile-pop-up-button");
   await expect(profilePopUpButton).toBeDefined();
   await userEvent.click(profilePopUpButton);
