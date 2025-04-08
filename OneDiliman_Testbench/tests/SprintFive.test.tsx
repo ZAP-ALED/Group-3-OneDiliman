@@ -5,7 +5,7 @@ import OrgPage from '../src/pages/OrgPage/OrgPage.tsx';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import DashboardPage from '../src/pages/Dashboard/DashboardPage.tsx';
-import { vi, expect, test} from 'vitest'
+import { vi, expect, test, assert} from 'vitest'
 
 // testing routed pages credit from: https://stackoverflow.com/questions/76081552/typeerror-cannot-destructure-property-basename-of-react-namespace-usecontex
 
@@ -44,6 +44,10 @@ async function logOut() {
   const dropdown = screen.queryAllByTestId("profile-dropdown"); //look into this, why many profile dropdowns?
   await user.click(dropdown[0]);
   await user.click(screen.getByTestId("logout-button"));
+}
+
+async function timeout(time: number) {
+  await new Promise((r) => setTimeout(r, time));
 }
 
 async function renderOrgPage() {
@@ -267,3 +271,45 @@ test('edit org details, see if user sees changes', async () => {
     
 }, 100000)
 
+test('check for profile popup', async () => {
+  await logInUser();
+  await cleanup();
+  await render(<MemoryRouter><DashboardPage /></MemoryRouter>);
+  await timeout(3000);
+//user-profile-pop-up, profile-pop-up-button
+  const profilePopUpButton = await screen.findByTestId("profile-pop-up-button");
+  await expect(profilePopUpButton).toBeDefined();
+  await userEvent.click(profilePopUpButton);
+
+  const profilePopUp = await screen.findByTestId("user-profile-pop-up");
+  await expect(profilePopUp).toBeDefined();
+})
+
+test('check for likes', async () => {
+  await logInUser();
+  await cleanup();
+  await renderOrgPage();
+
+  const postsTab = await screen.findByTestId("posts-tab");
+  await userEvent.click(postsTab);
+
+  const likeButton = await screen.findAllByTestId("like-button");
+  await expect(likeButton).toBeDefined();
+  
+}, 100000)
+
+test('check for follow button', async () => {
+  await logInUser();
+  await cleanup();
+  await renderOrgPage();
+
+  const followButton = await screen.queryAllByTestId("follow-button");
+  const unfollowButton = await screen.queryAllByTestId("unfollow-button");
+  if (followButton.length == 1 || unfollowButton.length == 1){
+    assert(true);
+  }
+  else{
+    assert(false);
+  }
+
+}, 100000)
