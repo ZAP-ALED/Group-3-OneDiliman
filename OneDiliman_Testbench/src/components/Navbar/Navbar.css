@@ -30,6 +30,7 @@ align-items: center;
 }
 
 .navbar-brand img {
+margin-left: 20px;
 margin-right: 9px;
 width: 40px; 
 height: 40px;
@@ -114,8 +115,8 @@ a:-webkit-any-link {
 }
 
 .menu-padding {
-    margin-right: 15px !important;
-    margin-left: 15px !important;
+    margin-right: 20px !important;
+    margin-left: 20px !important;
 
 }
 
