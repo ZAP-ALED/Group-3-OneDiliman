@@ -183,6 +183,7 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
                 <span>{likeCount} like{likeCount === 1 ? '' : 's'}</span>
                 <button
                   className={`btn btn-sm ${liked ? 'btn-danger' : 'btn-outline-primary'}`}
+                  data-testid="like-button"
                   onClick={async (e) => {
                     e.stopPropagation();
                     if (!user) return;

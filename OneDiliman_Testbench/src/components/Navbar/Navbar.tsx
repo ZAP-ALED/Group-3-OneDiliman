@@ -352,7 +352,7 @@ function DisplayLink({ currentPage }) {
         <Dropdown.Menu className="aligned-dropdown-menu">
           {/* Conditionally render the Profile option */}
           {role !== "Org Admin" && (
-            <Dropdown.Item onClick={handleOpenProfileModal}>
+            <Dropdown.Item data-testid="profile-pop-up-button" onClick={handleOpenProfileModal}>
               <FontAwesomeIcon icon={faUser} /> <span style={{ marginLeft: '5px' }}> Profile </span>
             </Dropdown.Item>
           )}
@@ -367,7 +367,7 @@ function DisplayLink({ currentPage }) {
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">User Profile</h5>
+                <h5 className="modal-title" data-testid="user-profile-pop-up">User Profile</h5>
                 <button type="button" className="close" onClick={handleCloseProfileModal} aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
