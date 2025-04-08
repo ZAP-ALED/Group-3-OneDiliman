@@ -1069,6 +1069,7 @@ const handleFollow = async () => {
                 }}
                 className="d-none"
                 id="post-image-upload"
+                data-testid="post-image-field"
               />
               <label htmlFor="post-image-upload" className="btn btn-outline-secondary">
                 <FontAwesomeIcon icon={faImage} className="me-2" />
