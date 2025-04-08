@@ -264,20 +264,6 @@ test('edit org details, see if user sees changes', async () => {
     await new Promise((r) => setTimeout(r, 3000))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    await spyAlert.mockRestore();
     
 }, 100000)
 
