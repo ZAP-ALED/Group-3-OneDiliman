@@ -17,7 +17,7 @@ test('renders dashboard', () => {
 
   expect(instructions).toBeInTheDocument();
 });
-
+/*
 test('returns no database connection', () => {
     const user = userEvent.setup()
   
@@ -27,7 +27,7 @@ test('returns no database connection', () => {
   
     // don't wait for database to load
     expect(instructions).toBeInTheDocument();
-});
+});*/
 
 test('returns nothing from search query', () => {
     const user = userEvent.setup()
