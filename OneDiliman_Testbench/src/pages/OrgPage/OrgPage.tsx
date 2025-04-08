@@ -692,7 +692,7 @@ const handleFollow = async () => {
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating organization:', error);
-      alert('Failed to update organization: ' + (error as Error).message);
+      //alert('Failed to update organization: ' + (error as Error).message);
     }
   };
 
