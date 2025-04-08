@@ -38,6 +38,7 @@ function DisplayLink({ currentPage }) {
   const [name, setName] = useState("Loading...");
   const [profile, setProfile] = useState<DocumentData | null>(null);
   const [role, setRole] = useState("Loading...");
+  const [email, setEmail] = useState("Loading...");
   const [editableCollege, setEditableCollege] = useState("");
   const [editableCourse, setEditableCourse] = useState("");
   const [isEditing, setIsEditing] = useState(false);
