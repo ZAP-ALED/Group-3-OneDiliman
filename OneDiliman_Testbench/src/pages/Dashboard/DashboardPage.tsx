@@ -9,6 +9,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { Spinner } from 'react-bootstrap';
+import { resendVerificationEmail } from "../../firebase/auth";
 
 export default function DashboardPage() {
 
@@ -207,20 +208,42 @@ const handleTagSelect = (tag: string) => {
     setTagActive(updatedTags.length > 0);
 };
 
+const handleResendVerification = async () => {
+  try {
+    await resendVerificationEmail();
+    alert("Verification email sent! Please check your inbox.");
+  } catch (error: any) {
+    alert(`Failed to send verification email: ${error.message}`);
+  }
+};
+
+
   return (
     <div className="background-container"> 
       <Navbar currentPage={"dashboard"}/>
 
       {verified === false && (
-    <div style={{
-        backgroundColor: "#ffcccb",
-        padding: "10px",
-        textAlign: "center",
-        color: "black",
-        fontWeight: "bold"
-    }}>
-        
-    </div>
+  <div style={{
+    backgroundColor: "#ffcccb",
+    padding: "3px",
+    textAlign: "center",
+    color: "black",
+    fontWeight: "normal",
+    fontSize: "14px"
+  }}>
+    Hey! You aren't verified yet. To interact with OneDiliman, please verify your email. If you are already verified, try relogging in.
+    {" "}
+    <span
+      onClick={handleResendVerification}
+      style={{
+        textDecoration: "underline",
+        color: "blue",
+        cursor: "pointer"
+      }}
+    >
+      Resend Verification Email
+    </span>
+  </div>
 )}
 
       <Sidebar orgs={sortedOrgs} toggleStarred={toggleStarred} />

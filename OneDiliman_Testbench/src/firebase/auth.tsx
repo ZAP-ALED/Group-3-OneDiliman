@@ -428,3 +428,24 @@ export const followOrganization = async (userId: string, orgId: string) => {
       return false;
     }
   };
+
+  export const resendVerificationEmail = async (): Promise<void> => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+ 
+    if (!user) {
+      throw new Error("No user is currently logged in.");
+    }
+ 
+    if (user.emailVerified) {
+      throw new Error("User is already verified.");
+    }
+ 
+    try {
+      await sendEmailVerification(user);
+      console.log("Verification email sent.");
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      throw error;
+    }
+  };
