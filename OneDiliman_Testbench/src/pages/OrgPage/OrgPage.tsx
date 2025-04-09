@@ -636,7 +636,7 @@ const handleFollow = async () => {
 
   return (
     <div className="org-page-container">
-      <Navbar currentPage="dashboard" />
+      <Navbar currentPage="orgpage" />
 
       {/* Back Button */}
         <button 
