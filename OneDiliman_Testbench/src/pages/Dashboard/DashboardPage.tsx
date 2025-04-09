@@ -12,7 +12,8 @@ import { Spinner } from 'react-bootstrap';
 import { resendVerificationEmail, isStudent } from "../../firebase/auth";
 
 export default function DashboardPage() {
-
+  
+  const [role, setRole] = useState<string | null>(null);
   const [orgs, setOrgs] = useState([]);
   const [userBookmarks, setUserBookmarks] = useState([]);
 
@@ -86,20 +87,19 @@ export default function DashboardPage() {
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             const userRef = doc(db, "users", user.uid);
-            const orgRef = doc(db, "organizations", user.uid);
-
+            
             try {
-                const [userSnapshot, orgSnapshot] = await Promise.all([
-                    getDoc(userRef),
-                    getDoc(orgRef),
-                ]);
+                const userSnapshot = await getDoc(userRef);
 
                 let isVerified = false;
 
                 if (userSnapshot.exists()) {
-                    isVerified = userSnapshot.data().isVerified || false;
-                } else if (orgSnapshot.exists()) {
-                    isVerified = orgSnapshot.data().isVerified || false;
+                  isVerified = userSnapshot.data().isVerified || false;
+                  const userRole = userSnapshot.data().role || "User";
+                  console.log("Fetched user role:", userRole); // Debugging line
+                  setRole(userRole);
+                } else {
+                    setRole(null);
                 }
 
                 setUid(user.uid);
@@ -110,12 +110,59 @@ export default function DashboardPage() {
             } catch (error) {
                 console.error("Error checking verification status:", error);
                 setVerified(false);
+                setRole(null); // Reset role on error
             }
         } else {
             setUid(null);
             setVerified(null);
+            setRole(null);
         }
     });
+}, []);
+
+useEffect(() => {
+  const auth = getAuth();
+  const db = getFirestore();
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const uid = user.uid;
+      const userRef = doc(db, "users", uid);
+      const orgRef = doc(db, "organizations", uid);
+
+      try {
+        const userSnapshot = await getDoc(userRef);
+        const orgSnapshot = await getDoc(orgRef);
+
+        let isVerified = false;
+
+        if (orgSnapshot.exists()) {
+          isVerified = orgSnapshot.data().isVerified || false;
+          setRole("Org admin");
+        } else if (userSnapshot.exists()) {
+          isVerified = userSnapshot.data().isVerified || false;
+          const userRole = userSnapshot.data().role || "User";
+          setRole(userRole);
+        } else {
+          setRole(null);
+        }
+
+        setUid(uid);
+        setVerified(isVerified);
+
+        const studentStatus = await isStudent(uid);
+        setIsStudentUser(studentStatus);
+      } catch (error) {
+        console.error("Error checking verification status or role:", error);
+        setVerified(false);
+        setRole(null); // Reset role on error
+      }
+    } else {
+      setUid(null);
+      setVerified(null);
+      setRole(null);
+    }
+  });
 }, []);
 
 useEffect(() => {
@@ -400,7 +447,7 @@ const handleResendVerification = async () => {
           <div className="row">
               {sortedOrgs.map((org, index) => (
                   <div className="col-sm-12 col-md-6 col-lg-4" key={index}>
-                      <OrgCard org={org} toggleStarred={toggleStarred} />
+                      <OrgCard org={org} toggleStarred={toggleStarred} role={role} />
                   </div>
               ))}
           </div>
