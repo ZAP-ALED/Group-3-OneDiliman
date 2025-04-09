@@ -7,7 +7,7 @@ import './Dashboard.css';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { followOrganization, unfollowOrganization, isFollowingOrganization } from '../../firebase/auth';
 
-export default function OrgCard({ org, toggleFollowed }) {
+export default function OrgCard({ org, toggleFollowed, role}) {
   const [uid, setUid] = useState("-1");
   const [isFollowed, setIsFollowed] = useState(false); // Default to false initially
 
@@ -60,6 +60,8 @@ export default function OrgCard({ org, toggleFollowed }) {
       <div className="card org-card">
         {/* Follow/Unfollow Icon */}
         <div className="follow-icon">
+          
+          {role !== "Org admin" && (
           <button
             type="button"
             className={`btn follow-button ${isFollowed ? 'followed' : 'not-followed'}`}
@@ -70,6 +72,7 @@ export default function OrgCard({ org, toggleFollowed }) {
               className="heart-icon"
             />
           </button>
+          )}
         </div>
 
         <Link to={`/dashboard/${orgId}`} className="card-link" data-testid={`org-card-${orgId}`}>
