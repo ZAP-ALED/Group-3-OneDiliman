@@ -330,14 +330,19 @@ function DisplayLink({ currentPage }) {
   }
 
 
-  else if (currentPage =='dashboard') {
+  else if (currentPage =='dashboard' || 
+           currentPage == 'orgpage'
+  ) {
     return (
     <>
     <div className="container-fluid">
       <a className="navbar-brand" href="#">
+      {/* Check if the user is a User, display followed orgs if is a user */}
+      {role === "User" && currentPage !== 'orgpage' && (
       <button className="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
         <span className="navbar-toggler-icon"></span>
       </button>
+      )}
 
         <Link to ="/dashboard">
         <img src={logo} alt="" className="d-inline-block align-middle"></img>
