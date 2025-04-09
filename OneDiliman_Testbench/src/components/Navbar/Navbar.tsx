@@ -33,12 +33,18 @@ function DisplayLink({ currentPage }) {
 
   const handleCloseProfileModal = () => {
     setShowProfileModal(false);
+    setIsEditing(false); 
   };
 
   const [name, setName] = useState("Loading...");
   const [profile, setProfile] = useState<DocumentData | null>(null);
   const [role, setRole] = useState("Loading...");
   const [email, setEmail] = useState("Loading...");
+  
+  const [editableFirstName, setEditableFirstName] = useState("");
+  const [editableMiddleName, setEditableMiddleName] = useState("");
+  const [editableLastName, setEditableLastName] = useState("");
+  const [editableEmail, setEditableEmail] = useState("");
   const [editableCollege, setEditableCollege] = useState("");
   const [editableCourse, setEditableCourse] = useState("");
   const [isEditing, setIsEditing] = useState(false);
@@ -157,6 +163,10 @@ function DisplayLink({ currentPage }) {
       const userDocRef = doc(db, "users", user.uid);
       
       await updateDoc(userDocRef, {
+        firstName: editableFirstName,
+        middleName: editableMiddleName,
+        lastName: editableLastName,
+        email: editableEmail,
         college: editableCollege,
         course: editableCourse
       });
@@ -208,6 +218,10 @@ function DisplayLink({ currentPage }) {
               setRole(`${userData.role}`)
               setProfile(userData)
               setEmail(userData.email)
+              setEditableFirstName(userData.firstName || "")
+              setEditableMiddleName(userData.middleName || "")
+              setEditableLastName(userData.lastName || "")
+              setEditableEmail(userData.email || "")
               setEditableCollege(userData.college || "")
               setEditableCourse(userData.course || "")
             }
@@ -377,15 +391,42 @@ function DisplayLink({ currentPage }) {
                 <div className="row">
                   <div className="col-4 profile-name profile-firstname">
                     <div className='profile-label'> First Name </div>
-                    {profile?.firstName || ""}
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editableFirstName}
+                        onChange={(e) => setEditableFirstName(e.target.value)}
+                      />
+                    ) : (
+                      <span>{profile?.firstName || ""}</span>
+                    )}
                   </div>
                   <div className="col-3 profile-name profile-middlename">
                     <div className='profile-label'> Middle Name </div>
-                    {profile?.middleName || ""}
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editableMiddleName}
+                        onChange={(e) => setEditableMiddleName(e.target.value)}
+                      />
+                    ) : (
+                      <span>{profile?.middleName || ""}</span>
+                    )}
                   </div>
                   <div className="col-4 profile-name profile-lastname">
                     <div className='profile-label'> Last Name </div>
-                    {profile?.lastName || ""}
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editableLastName}
+                        onChange={(e) => setEditableLastName(e.target.value)}
+                      />
+                    ) : (
+                      <span>{profile?.lastName || ""}</span>
+                    )}
                   </div>
                   
                   <div className="col-5 profile-name">
@@ -394,8 +435,17 @@ function DisplayLink({ currentPage }) {
                   </div>
 
                   <div className="col-5 profile-name">
-                  <div className='profile-label'> UP Mail </div>
-                    <span>{profile?.email}</span>
+                    <div className='profile-label'> UP Mail </div>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={editableEmail}
+                        onChange={(e) => setEditableEmail(e.target.value)}
+                      />
+                    ) : (
+                      <span>{profile?.email}</span>
+                    )}
                   </div>
         
                   
@@ -422,19 +472,24 @@ function DisplayLink({ currentPage }) {
                   <div className="col-6 profile-name profile-course">
                     <div className='profile-label'> Course </div>
                     {isEditing ? (
-                      <select
-                        className="form-control"
-                        value={editableCourse}
-                        onChange={(e) => setEditableCourse(e.target.value)}
-                        disabled={!editableCollege}
-                      >
-                        <option value="">Select Course</option>
-                        {getCoursesForCollege(editableCollege).map((course) => (
-                          <option key={course} value={course}>
-                            {course}
-                          </option>
-                        ))}
-                      </select>
+                      <div>
+                        <select
+                          className="form-control"
+                          value={editableCourse}
+                          onChange={(e) => setEditableCourse(e.target.value)}
+                          disabled={!editableCollege}
+                        >
+                          <option value="">Select Course</option>
+                          {getCoursesForCollege(editableCollege).map((course) => (
+                            <option key={course} value={course}>
+                              {course}
+                            </option>
+                          ))}
+                        </select>
+                        {!editableCollege && 
+                          <small className="text-muted mt-1 d-block">Please choose a college first</small>
+                        }
+                      </div>
                     ) : (
                       <span>{profile?.course || ""}</span>
                     )}
