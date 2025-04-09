@@ -48,7 +48,7 @@ color: black;
 }
 
 .follow-button.not-followed .heart-icon {
-  color: white; /* White for not followed */
+  color: rgb(0, 0, 0); /* White for not followed */
   stroke: black; /* Optional: Add a black stroke for better visibility */
 }
 

@@ -637,6 +637,14 @@ const handleFollow = async () => {
   return (
     <div className="org-page-container">
       <Navbar currentPage="dashboard" />
+
+      {/* Back Button */}
+        <button 
+          className="back-button" 
+          onClick={() => window.location.href = "/dashboard"}
+        >
+          ← Back to Dashboard
+        </button>
   
       <div className="container mt-4">
         <div className="org-hero-card">

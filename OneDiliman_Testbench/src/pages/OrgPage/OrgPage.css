@@ -15,6 +15,25 @@
     text-align: center;
     padding: 2rem;
   }
+
+  .back-button {
+    position: fixed;
+    top: 70px; /* Adjust based on your navbar height */
+    left: 20px;
+    background-color: #8d021f;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    z-index: 1000;
+    transition: background-color 0.3s ease;
+  }
+  
+  .back-button:hover {
+    background-color: #6d0118;
+  }
   
   .back-link {
     color: #6c757d;

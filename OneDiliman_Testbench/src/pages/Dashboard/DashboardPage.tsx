@@ -341,7 +341,9 @@ const handleResendVerification = async () => {
           <div className="col-2"></div>
         </div>
 
-        <div className="row search-filters-row align-items-center justify-content-md-center">
+        {/*  SEARCH FILTERS, FOR RE-IMPLEMENTATION */}
+        
+        {/* <div className="row search-filters-row align-items-center justify-content-md-center">
           <button type="button" className={`filter-btn ${starredFilterActive ? 'active' : ''}`} onClick={toggleStarredFilter}> Starred </button>
           <button type="button" className={`filter-btn ${openForAppFilterActive ? 'active' : ''}`} onClick={toggleOpenForAppFilter}> Open for Applications </button>
           <div className="col-md-auto">
@@ -350,7 +352,7 @@ const handleResendVerification = async () => {
                 Scope
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                  {/* Scope dropdown items */}
+                  {/* Scope dropdown items }
                   <Dropdown.Item className={selectedScope === "computer science" ? "selected-scope" : ""} 
                   onClick={() => handleScopeSelect("computer science")}>
                       Computer Science</Dropdown.Item>
@@ -363,7 +365,7 @@ const handleResendVerification = async () => {
                 More Tags
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                  {/* More Tags dropdown items */}
+                  {/* More Tags dropdown items }
                   <Dropdown.Item className={selectedTags.includes("academic") ? "selected-scope" : ""} 
                   onClick={(e) => { e.stopPropagation(); handleTagSelect("academic"); }}>
                       Academic </Dropdown.Item>
@@ -378,8 +380,8 @@ const handleResendVerification = async () => {
                       Non-Profit </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
-          </div>
-        </div>
+          </div> 
+        </div> */}
       </div>
       </div>
 
