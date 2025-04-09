@@ -9,6 +9,7 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { Spinner } from 'react-bootstrap';
+import { resendVerificationEmail, isStudent } from "../../firebase/auth";
 
 export default function DashboardPage() {
 
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   // Sprint 4 - Loading Status
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isStudentUser, setIsStudentUser] = useState<boolean>(false);
 
 
  
@@ -102,6 +104,9 @@ export default function DashboardPage() {
 
                 setUid(user.uid);
                 setVerified(isVerified);
+
+                const studentStatus = await isStudent(user.uid);
+                setIsStudentUser(studentStatus);
             } catch (error) {
                 console.error("Error checking verification status:", error);
                 setVerified(false);
@@ -207,21 +212,60 @@ const handleTagSelect = (tag: string) => {
     setTagActive(updatedTags.length > 0);
 };
 
+const handleResendVerification = async () => {
+  try {
+    await resendVerificationEmail();
+    alert("Verification email sent! Please check your inbox.");
+  } catch (error: any) {
+    alert(`Failed to send verification email: ${error.message}`);
+  }
+};
+
+
   return (
     <div className="background-container"> 
       <Navbar currentPage={"dashboard"}/>
 
       {verified === false && (
-    <div style={{
-        backgroundColor: "#ffcccb",
-        padding: "10px",
-        textAlign: "center",
-        color: "black",
-        fontWeight: "bold"
-    }}>
-        
-    </div>
+  <div style={{
+    backgroundColor: "#ffcccb",
+    padding: "3px",
+    textAlign: "center",
+    color: "black",
+    fontWeight: "normal",
+    fontSize: "14px"
+  }}>
+    {isStudentUser ? (
+      <>
+        Hey! You aren't verified yet. Please verify your email to interact with OneDiliman.
+      </>
+    ) : (
+      <>
+        Hey! Your organization account isn't verified yet. Please email us at{" "}
+        <a
+          href="mailto:onediliman.help@gmail.com"
+          style={{ textDecoration: "underline", color: "blue" }}
+        >
+          onedilimanemail@up.edu.ph
+        </a>{" "}
+        and check your inbox for a verification email to publish your account.
+      </>
+    )}
+    {" "}
+    <span
+      onClick={handleResendVerification}
+      style={{
+        textDecoration: "underline",
+        color: "blue",
+        cursor: "pointer"
+      }}
+    >
+      Resend Verification Email
+    </span>
+  </div>
 )}
+
+
 
       <Sidebar orgs={sortedOrgs} toggleStarred={toggleStarred} />
       <div className="header-container">

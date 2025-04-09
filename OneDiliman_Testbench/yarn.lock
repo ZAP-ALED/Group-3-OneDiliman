@@ -1134,10 +1134,10 @@
     human-id "^1.0.2"
     prettier "^2.7.1"
 
-"@esbuild/darwin-arm64@0.25.1":
+"@esbuild/win32-x64@0.25.1":
   version "0.25.1"
-  resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.1.tgz"
-  integrity sha512-5hEZKPf+nQjYoSr/elb62U19/l1mZDdqidGfmFutVUjjUZrOazAtwK+Kr+3y0C/oeJfLlxo9fXb1w7L+P7E4FQ==
+  resolved "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.1.tgz"
+  integrity sha512-Y1EQdcfwMSeQN/ujR5VayLOJ1BHaK+ssyk0AEzPjC+t1lITgsnccPqFjb6V+LsTp/9Iov4ysfjxLaGJ9RPtkVg==
 
 "@eslint-community/eslint-utils@^4.2.0", "@eslint-community/eslint-utils@^4.4.0":
   version "4.4.0"
@@ -2014,10 +2014,10 @@
     uncontrollable "^8.0.1"
     warning "^4.0.3"
 
-"@rollup/rollup-darwin-arm64@4.34.6":
+"@rollup/rollup-win32-x64-msvc@4.34.6":
   version "4.34.6"
-  resolved "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.34.6.tgz"
-  integrity sha512-z9Ib+OzqN3DZEjX7PDQMHEhtF+t6Mi2z/ueChQPLS/qUMKY7Ybn5A2ggFoKRNRh1q1T03YTQfBTQCJZiepESAg==
+  resolved "https://registry.npmjs.org/@rollup/rollup-win32-x64-msvc/-/rollup-win32-x64-msvc-4.34.6.tgz"
+  integrity sha512-0PVwmgzZ8+TZ9oGBmdZoQVXflbvuwzN/HRclujpl4N/q3i+y0lqLw8n1bXA8ru3sApDjlmONaNAuYr38y1Kr9w==
 
 "@sinclair/typebox@^0.27.8":
   version "0.27.8"
@@ -2086,10 +2086,10 @@
   resolved "https://registry.npmjs.org/@testing-library/user-event/-/user-event-14.6.1.tgz"
   integrity sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw==
 
-"@toastdotdev/lib-darwin-arm64@0.0.1":
+"@toastdotdev/lib-win32-x64-msvc@0.0.1":
   version "0.0.1"
-  resolved "https://registry.npmjs.org/@toastdotdev/lib-darwin-arm64/-/lib-darwin-arm64-0.0.1.tgz"
-  integrity sha512-6UbPdjDFeZsH/2gdNpc3YKVI9FF2VYGLaVUYSUfywpfw4EbAfw/xS+4VZR1ThdowEkoP1Bgy360z3/Iwmv1svg==
+  resolved "https://registry.npmjs.org/@toastdotdev/lib-win32-x64-msvc/-/lib-win32-x64-msvc-0.0.1.tgz"
+  integrity sha512-xPL3bqnRwEXUzO6bxErvcNiQ+kH4K3E78cpjYu3q+94np9tb0VpCj38WrD8xyQFhvbvnvS+SP8MbZcBFTPgrRA==
 
 "@toastdotdev/lib@0.0.1":
   version "0.0.1"
@@ -3442,11 +3442,6 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
-
-fsevents@^2.3.2, fsevents@~2.3.2, fsevents@~2.3.3:
-  version "2.3.3"
-  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
-  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
 function-bind@^1.1.2:
   version "1.1.2"

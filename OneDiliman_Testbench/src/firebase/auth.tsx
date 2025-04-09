@@ -92,13 +92,19 @@ export const doSignInWithEmailAndPassword = async (formData: any) => {
             }
         }
 
-        // Step 4: If user exists, update verification status
+        // Step 4: If user exists, update verification status is also student
         if (userSnapshot.exists() && user.emailVerified) {
-            await setDoc(userRef, { isVerified: true }, { merge: true });
-            console.log(`User is verified, updated Firestore in ${collectionType} collection.`);
-        } else {
-            console.log("User is not verified, no update to Firestore.");
-        }
+          const studentStatus = await isStudent(user.uid);
+          if (studentStatus) {
+              await setDoc(userRef, { isVerified: true }, { merge: true });
+              console.log(`Student user verified, updated Firestore in ${collectionType} collection.`);
+          } else {
+              console.log("User email is verified, but account is not a student. Firestore not updated.");
+          }
+      } else {
+          console.log("User is not verified, no update to Firestore.");
+      }
+      
 
         return { user, collectionType };
     } catch (error) {
@@ -166,14 +172,14 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
                 });
             
                 console.log("Successfully wrote organization data to Firestore");
-
+ 
                 try {
                     await sendEmailVerification(cred.user);
                     console.log("Verfication e-mail sent");
                 }
                 catch (error) {
                     console.log("Error sending verification e-mail");
-                }
+                } 
 
             const userRef = doc(db, "organization-admins", cred.user.uid);
             await setDoc(userRef, {
@@ -426,5 +432,26 @@ export const followOrganization = async (userId: string, orgId: string) => {
     } catch (error) {
       console.error('Error checking if user liked post:', error);
       return false;
+    }
+  };
+
+  export const resendVerificationEmail = async (): Promise<void> => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+ 
+    if (!user) {
+      throw new Error("No user is currently logged in.");
+    }
+ 
+    if (user.emailVerified) {
+      throw new Error("User is already verified.");
+    }
+ 
+    try {
+      await sendEmailVerification(user);
+      console.log("Verification email sent.");
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      throw error;
     }
   };
