@@ -41,7 +41,7 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState<number>(post.postLikes ?? 0);
   const [isStudentUser, setIsStudentUser] = useState<boolean | null>(null);
-
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -184,18 +184,27 @@ const PostCard: React.FC<PostCardDeets> = ({ post, isUserAnOrgAdmin, onEdit, onD
                 <button
                   className={`btn btn-sm ${liked ? 'btn-danger' : 'btn-outline-primary'}`}
                   data-testid="like-button"
+                  disabled={isProcessing} // Disable the button while processing
                   onClick={async (e) => {
                     e.stopPropagation();
-                    if (!user) return;
+                    if (!user || isProcessing) return; // Prevent multiple clicks
+
+                    setIsProcessing(true); // Set processing state to true
 
                     if (liked) {
                       await unlikePost(user.uid, post.id);
-                      setLiked(false);
-                      setLikeCount(prev => prev - 1);
+                      setTimeout(() => {
+                        setLiked(false); // Delay setting liked to false
+                        setLikeCount(prev => prev - 1);
+                        setIsProcessing(false); // Reset processing state
+                      }, 100); // 0.1-second delay
                     } else {
                       await likePost(user.uid, post.id);
-                      setLiked(true);
-                      setLikeCount(prev => prev + 1);
+                      setTimeout(() => {
+                        setLiked(true); // Delay setting liked to true
+                        setLikeCount(prev => prev + 1);
+                        setIsProcessing(false); // Reset processing state
+                      }, 100); // 0.1-second delay
                     }
                   }}
                 >
