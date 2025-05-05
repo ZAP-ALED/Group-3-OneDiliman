@@ -11,6 +11,7 @@ import Navbar from "../../components/Navbar/Navbar";
 import { Container, Form } from "react-bootstrap";
 import { useAuth } from "../../contexts/authContext";
 import { doSignInAsGuest, doSignInWithEmailAndPassword } from "../../firebase/auth";
+import { doc, getDoc, getFirestore} from 'firebase/firestore';
 
 export default function LogInPage() {
   const { userLoggedIn } = useAuth();
@@ -46,9 +47,22 @@ export default function LogInPage() {
     }
 
     try {
-      await doSignInWithEmailAndPassword(formData);
-
-      window.location.href = "/dashboard";
+      const userCredential = await doSignInWithEmailAndPassword(formData);
+      const user = userCredential.user;
+  
+      // console.log("User signed in:", user); 
+      // console.log("User UID:", user.uid);
+  
+      const db = getFirestore();
+      getDoc(doc(db, "organizations", user.uid)).then((docSnap) => {
+        if (docSnap.exists()) {
+          // console.log("User is an admin:", docSnap.data());
+          window.location.href = `/dashboard/${user.uid}`;
+        } else {
+          // console.log("User is not an admin:", user.uid);
+          window.location.href = "/dashboard";
+        }
+      });
     } catch (e) {
       //alert(e.code)
       if (e.code === "auth/invalid-credential") {
