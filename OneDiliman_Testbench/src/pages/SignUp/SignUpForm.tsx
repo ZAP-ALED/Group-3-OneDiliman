@@ -146,7 +146,7 @@ export default function SignUpForm() {
       <div className="card signup-form">
         <div className="card-title signup-text">Sign Up</div>
         <div className="card-title signup-subtext">
-          Create an Ugnayan Account using your UP Mail
+          Create a OneDiliman Account using your UP Mail
         </div>
         <div className="card-body signup-inputs">
           <form className="needs-validation" onSubmit={handleSubmit}>

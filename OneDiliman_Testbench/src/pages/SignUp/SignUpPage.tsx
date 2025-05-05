@@ -5,7 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import SignUpStudentForm from "./SignUpStudentForm";
 import SignUpOrganizationForm from "./SignUpOrganizationForm";
 import "./SignUp.css";
-import logo from "../../assets/logo_placeholder.png";
+import logo from "../../assets/logo/onediliman_logo.png";
 
 export default function SignUpPage() {
   const [accountType, setAccountType] = useState("student");

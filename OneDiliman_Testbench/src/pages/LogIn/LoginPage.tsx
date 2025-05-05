@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./LogIn.css";
-import logo from "../../assets/logo/Ugnayan Logo circle wo name.png";
+import logo from "../../assets/logo/onediliman_logo.png";
 import showEye from "../../assets/eye.png";
 import hideEye from "../../assets/hidden.png";
 import emailIcon from "../../assets/user.png";

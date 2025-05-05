@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import logo from "../../assets/logo/Ugnayan Logo circle wo name.png";
+import logo from "../../assets/logo/onediliman_logo.png";
 import Navbar from '../../components/Navbar/Navbar';
 import './LandingPage.css';
 
