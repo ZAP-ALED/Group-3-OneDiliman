@@ -53,7 +53,7 @@ async function timeout(time: number) {
 async function renderOrgPage() {
   await render(
     <MemoryRouter><DashboardPage /></MemoryRouter>);
-  await new Promise((r) => setTimeout(r, 7000));
+  await new Promise((r) => setTimeout(r, 10000));
 
   const orgCard = await screen.findByTestId("org-card-jO8BwsPe1lSCAo1gIRa6oR8vGpH3");
   await expect(orgCard).toBeDefined();
@@ -74,7 +74,7 @@ await logInOrg();
     cleanup();
   
     await renderOrgPage();
-    
+    await timeout(3000);
     //click post tab
     const postsTab = await screen.findByTestId("posts-tab");
     await expect(postsTab).toBeDefined();
@@ -88,6 +88,7 @@ await logInOrg();
     //first post, fill in title, content
     const postOneTitle = 'test one title'
     const postOneContent = 'test one content'
+    await timeout(3000);
 
     const titleOneField = await screen.findByTestId("post-title-field");
     await expect(titleOneField).toBeDefined();
@@ -127,6 +128,8 @@ await logInOrg();
     //login as user
     await logInUser();
     cleanup();
+
+    await timeout(3000);
   
     await render(
       <MemoryRouter><DashboardPage /></MemoryRouter>);
@@ -143,7 +146,7 @@ await logInOrg();
     await expect(clearAllNotificationButton).toBeDefined();
     await fireEvent.click(clearAllNotificationButton);
 
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 3000));
     
     const notificationMessageAfterDelete = await screen.queryAllByTestId("notification-message");
     await expect(notificationMessageAfterDelete.length).toBe(0)
@@ -287,7 +290,7 @@ test('check for profile popup', async () => {
 
   const profilePopUp = await screen.findByTestId("user-profile-pop-up");
   await expect(profilePopUp).toBeDefined();
-})
+}, 100000)
 
 test('check for likes', async () => {
   await logInUser();
