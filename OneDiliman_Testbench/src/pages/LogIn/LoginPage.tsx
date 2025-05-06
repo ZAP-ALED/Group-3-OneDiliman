@@ -73,11 +73,11 @@ export default function LogInPage() {
     }    
   };
 
-  const handleGuest = async (event: any) => {
-    await doSignInAsGuest();
-    console.log("Signed in as guest");
-    window.location.href = "/dashboard";
-  };
+  // const handleGuest = async (event: any) => {
+  //   await doSignInAsGuest();
+  //   console.log("Signed in as guest");
+  //   window.location.href = "/dashboard";
+  // };
 
   const handleBlur = (event: any) => {
     const { name } = event.target;
@@ -246,8 +246,8 @@ export default function LogInPage() {
             <a href="#" className="login-forget">
               Forgot your username or password?
             </a>
-            <button className="login-guest" onClick={handleGuest}>Log in as a Guest</button>
-            Some features will be unavailable with guest access.
+            {/* <button className="login-guest" onClick={handleGuest}>Log in as a Guest</button>
+            Some features will be unavailable with guest access. */}
           </div>
         </div>
       </div>
