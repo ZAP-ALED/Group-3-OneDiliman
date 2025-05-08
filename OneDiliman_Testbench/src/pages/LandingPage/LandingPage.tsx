@@ -12,7 +12,7 @@ export default function LandingPage() {
             <div className="row">
               <div className="col text-center">
                 <h5 className="welcome-to">WELCOME TO</h5>
-                <h1 className="display-1 ugnayan-text mb-0">OneDiliman</h1>
+                <h1 className="display-1 ugnayan-text mb-0">OneDiliman </h1>
                 <h3 className="gateway">UP Diliman's Org-Hub</h3>
               </div>
             </div>
@@ -50,20 +50,12 @@ export default function LandingPage() {
 
         <section id="footer">
           <div className="container">
-            <footer className="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
-              <div className="col-md-4 d-flex align-items-center">
-                <a href="/" className="mb-3 me-2 mb-md-0 text-body-secondary text-decoration-none lh-1">
-                  <img src={logo} alt="" width="30" height="30"></img>
-                </a>
-                <span className="mb-3 mb-md-0 text-body-secondary">&copy; 2024</span>
+            <footer className="d-flex flex-column justify-content-center align-items-center py-3 my-4 border-top">
+              <div className="d-flex flex-column align-items-center">
+          <a href="/" className="mb-2 text-body-secondary text-decoration-none lh-1">
+            <img src={logo} alt="" width="30" height="30"></img> <span className="text-body-secondary">&copy; 2024</span>
+          </a>
               </div>
-
-              <ul className="nav col-md-4 justify-content-end">
-                <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">Home</a></li>
-                <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">FAQs</a></li>
-                <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">Contact Us</a></li>
-                <li className="nav-item"><a href="#" className="nav-link px-2 text-body-secondary">About Us</a></li>
-              </ul>
             </footer>
           </div>
         </section>
