@@ -45,6 +45,7 @@ export const doCreateUserWithEmailAndPassword = async (formData: any) => {
 
     }).catch((error) => {
         console.error("Error signing up: ", error);
+        throw error;
     });
 };
 
@@ -191,6 +192,7 @@ export const doCreateOrgWithEmailAndPassword = async (formData: any) => {
         }
         catch (error){
             console.error("Error writing to Firestore:", error);
+            throw error;
         }
     });
 }

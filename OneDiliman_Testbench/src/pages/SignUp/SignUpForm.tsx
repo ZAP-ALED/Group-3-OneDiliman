@@ -64,7 +64,7 @@ export default function SignUpForm() {
       await doCreateUserWithEmailAndPassword(formData);
 
       window.location.href = "/dashboard";
-    } catch (e) {
+    } catch (e: any) {
       if (e.code === "auth/email-already-in-use") {
         alert("Email is already in use");
       } else if (e.code === "auth/too-many-requests") {
